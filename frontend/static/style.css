@@ -295,69 +295,81 @@ main {
    ======================================== */
 
 .prices-section {
-    padding: 60px 0;
-    background: linear-gradient(180deg, rgba(255, 107, 107, 0.05) 0%, transparent 100%);
+    padding: 80px 0;
+    background: var(--dark-bg);
 }
 
-.prices-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 30px;
-    margin-top: 50px;
+.prices-table-wrapper {
+    margin-top: 60px;
+    overflow-x: auto;
 }
 
-.price-card {
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    padding: 40px 30px;
-    text-align: center;
+.prices-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.prices-table tbody tr {
+    border-bottom: 1px solid var(--border-color);
     transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
 }
 
-.price-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 0.3s ease;
+.prices-table tbody tr:hover {
+    background-color: rgba(255, 140, 66, 0.08);
 }
 
-.price-card:hover {
-    transform: translateY(-10px);
-    border-color: var(--primary-color);
-    box-shadow: 0 20px 40px rgba(255, 107, 107, 0.1);
+.prices-table tbody tr:last-child {
+    border-bottom: none;
 }
 
-.price-card:hover::before {
-    transform: scaleX(1);
+.price-category {
+    padding: 24px 40px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 16px;
 }
 
 .price-icon {
-    font-size: 48px;
-    margin-bottom: 20px;
+    font-size: 32px;
+    min-width: 32px;
 }
 
-.price-card h3 {
-    font-size: 20px;
-    margin-bottom: 15px;
-    color: var(--text-primary);
-}
-
-.price-value {
-    font-size: 36px;
+.price-label {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
     font-weight: 700;
-    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+}
+
+.price-availability {
+    padding: 24px 40px;
+    color: var(--text-secondary);
+    text-align: center;
+    font-size: 14px;
+}
+
+.price-amount {
+    padding: 24px 40px;
+    text-align: right;
+    color: var(--secondary-color);
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+@media (max-width: 768px) {
+    .price-category,
+    .price-availability,
+    .price-amount {
+        padding: 16px 20px;
+        font-size: 14px;
+    }
+
+    .price-amount {
+        font-size: 16px;
+    }
 }
 
 /* ========================================

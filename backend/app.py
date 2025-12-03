@@ -82,6 +82,9 @@ PRICES = {
     "adult": 9.0,
     "child": 6.0,
     "senior": 7.0,
+    "student": 7.5,
+    "disabled": 6.5,
+    "unemployed": 6.5,
 }
 
 MOVIES = [
