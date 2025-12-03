@@ -6,11 +6,15 @@ document.addEventListener('DOMContentLoaded', function () {
     // ========================================
     // DOM Elements - Booking
     // ========================================
-    const dateButtons = Array.from(document.querySelectorAll('.date-btn'));
-    const dateButtonsContainer = document.getElementById('date-buttons-container');
-    const datePrevBtn = document.getElementById('date-prev-btn');
-    const dateNextBtn = document.getElementById('date-next-btn');
     const timeButtons = Array.from(document.querySelectorAll('.time-btn'));
+
+    // Calendar elements
+    const quickBtns = document.querySelectorAll('.quick-btn');
+    const calendarMonthSelect = document.getElementById('calendar-month');
+    const calendarYearSelect = document.getElementById('calendar-year');
+    const calendarPrevBtn = document.getElementById('calendar-prev-month');
+    const calendarNextBtn = document.getElementById('calendar-next-month');
+    const calendarDaysContainer = document.getElementById('calendar-days-container');
     const modal = document.getElementById('booking-modal');
     const modalBackdrop = document.querySelector('.modal-backdrop');
     const modalClose = modal.querySelector('.modal-close');
@@ -264,59 +268,178 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // ========================================
-    // DATE SELECTION
+    // DATE SELECTION - CALENDAR
     // ========================================
-    function setActiveDate(btn) {
-        dateButtons.forEach((b) => b.classList.remove('active'));
-        btn.classList.add('active');
-        selectedDate = btn.dataset.iso;
+    let currentDisplayMonth = new Date().getMonth();
+    let currentDisplayYear = new Date().getFullYear();
+
+    function initializeYearSelect() {
+        const today = new Date();
+        for (let year = today.getFullYear(); year <= today.getFullYear() + 1; year++) {
+            const option = document.createElement('option');
+            option.value = year;
+            option.textContent = year;
+            if (year === today.getFullYear()) option.selected = true;
+            calendarYearSelect.appendChild(option);
+        }
+    }
+
+    function renderCalendar() {
+        const firstDay = new Date(currentDisplayYear, currentDisplayMonth, 1);
+        const lastDay = new Date(currentDisplayYear, currentDisplayMonth + 1, 0);
+        const daysInMonth = lastDay.getDate();
+        const startingDayOfWeek = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1; // Monday = 0
+
+        calendarDaysContainer.innerHTML = '';
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // Previous month's days
+        const prevMonthLastDay = new Date(currentDisplayYear, currentDisplayMonth, 0).getDate();
+        for (let i = startingDayOfWeek - 1; i >= 0; i--) {
+            const dayBtn = document.createElement('button');
+            dayBtn.className = 'calendar-day other-month';
+            dayBtn.textContent = prevMonthLastDay - i;
+            dayBtn.disabled = true;
+            calendarDaysContainer.appendChild(dayBtn);
+        }
+
+        // Current month's days
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dayBtn = document.createElement('button');
+            dayBtn.className = 'calendar-day';
+            dayBtn.textContent = day;
+            dayBtn.type = 'button';
+
+            const currentDate = new Date(currentDisplayYear, currentDisplayMonth, day);
+            currentDate.setHours(0, 0, 0, 0);
+
+            // Mark today
+            if (currentDate.getTime() === today.getTime()) {
+                dayBtn.classList.add('today');
+            }
+
+            // Mark selected date
+            if (currentDate.toISOString().split('T')[0] === selectedDate) {
+                dayBtn.classList.add('active');
+            }
+
+            // Disable past dates
+            if (currentDate < today) {
+                dayBtn.disabled = true;
+                dayBtn.classList.add('other-month');
+            }
+
+            dayBtn.addEventListener('click', () => {
+                const iso = currentDate.toISOString().split('T')[0];
+                setSelectedDate(iso);
+                renderCalendar();
+                updateQuickBtns();
+            });
+
+            calendarDaysContainer.appendChild(dayBtn);
+        }
+
+        // Next month's days
+        const totalCells = calendarDaysContainer.children.length;
+        const remainingCells = 42 - totalCells; // 6 weeks * 7 days
+        for (let day = 1; day <= remainingCells; day++) {
+            const dayBtn = document.createElement('button');
+            dayBtn.className = 'calendar-day other-month';
+            dayBtn.textContent = day;
+            dayBtn.disabled = true;
+            calendarDaysContainer.appendChild(dayBtn);
+        }
+    }
+
+    function setSelectedDate(iso) {
+        selectedDate = iso;
         document.body.dataset.selectedDate = selectedDate;
     }
 
-    // Select first date by default
-    if (dateButtons.length) {
-        setActiveDate(dateButtons[0]);
+    function updateQuickBtns() {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+
+        const selectedDateObj = new Date(selectedDate);
+
+        quickBtns.forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.days === '0' && selectedDateObj.getTime() === today.getTime()) {
+                btn.classList.add('active');
+            } else if (btn.dataset.days === '1' && selectedDateObj.getTime() === tomorrow.getTime()) {
+                btn.classList.add('active');
+            }
+        });
     }
 
-    dateButtons.forEach((btn) => {
-        btn.addEventListener('click', (event) => {
-            setActiveDate(btn);
-            // Scroll to active button
-            btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-            // Add ripple effect
-            addRippleEffect(btn, event);
+    // Quick button handlers
+    quickBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const daysOffset = parseInt(btn.dataset.days);
+            const newDate = new Date();
+            newDate.setDate(newDate.getDate() + daysOffset);
+            newDate.setHours(0, 0, 0, 0);
+
+            currentDisplayMonth = newDate.getMonth();
+            currentDisplayYear = newDate.getFullYear();
+
+            calendarMonthSelect.value = currentDisplayMonth;
+            calendarYearSelect.value = currentDisplayYear;
+
+            const iso = newDate.toISOString().split('T')[0];
+            setSelectedDate(iso);
+            renderCalendar();
+            updateQuickBtns();
         });
     });
 
-    // Date navigation buttons
-    if (datePrevBtn && dateNextBtn && dateButtonsContainer) {
-        function updateDateNavButtons() {
-            const scrollLeft = dateButtonsContainer.scrollLeft;
-            const scrollWidth = dateButtonsContainer.scrollWidth;
-            const clientWidth = dateButtonsContainer.clientWidth;
+    // Calendar navigation
+    calendarMonthSelect.addEventListener('change', (e) => {
+        currentDisplayMonth = parseInt(e.target.value);
+        renderCalendar();
+        updateQuickBtns();
+    });
 
-            datePrevBtn.disabled = scrollLeft === 0;
-            dateNextBtn.disabled = scrollLeft + clientWidth >= scrollWidth - 1;
+    calendarYearSelect.addEventListener('change', (e) => {
+        currentDisplayYear = parseInt(e.target.value);
+        renderCalendar();
+        updateQuickBtns();
+    });
 
-            datePrevBtn.style.opacity = scrollLeft === 0 ? '0.5' : '1';
-            dateNextBtn.style.opacity = scrollLeft + clientWidth >= scrollWidth - 1 ? '0.5' : '1';
+    calendarPrevBtn.addEventListener('click', () => {
+        currentDisplayMonth--;
+        if (currentDisplayMonth < 0) {
+            currentDisplayMonth = 11;
+            currentDisplayYear--;
         }
+        calendarMonthSelect.value = currentDisplayMonth;
+        calendarYearSelect.value = currentDisplayYear;
+        renderCalendar();
+        updateQuickBtns();
+    });
 
-        datePrevBtn.addEventListener('click', () => {
-            dateButtonsContainer.scrollBy({ left: -200, behavior: 'smooth' });
-            setTimeout(updateDateNavButtons, 300);
-        });
+    calendarNextBtn.addEventListener('click', () => {
+        currentDisplayMonth++;
+        if (currentDisplayMonth > 11) {
+            currentDisplayMonth = 0;
+            currentDisplayYear++;
+        }
+        calendarMonthSelect.value = currentDisplayMonth;
+        calendarYearSelect.value = currentDisplayYear;
+        renderCalendar();
+        updateQuickBtns();
+    });
 
-        dateNextBtn.addEventListener('click', () => {
-            dateButtonsContainer.scrollBy({ left: 200, behavior: 'smooth' });
-            setTimeout(updateDateNavButtons, 300);
-        });
-
-        dateButtonsContainer.addEventListener('scroll', updateDateNavButtons);
-
-        // Initialize button states
-        updateDateNavButtons();
-    }
+    // Initialize
+    initializeYearSelect();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    setSelectedDate(today.toISOString().split('T')[0]);
+    renderCalendar();
+    updateQuickBtns();
 
     // ========================================
     // MODAL MANAGEMENT
