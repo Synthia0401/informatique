@@ -388,15 +388,10 @@ main {
 
 .date-picker-wrapper {
     display: flex;
-    gap: 40px;
-    align-items: flex-start;
+    gap: 16px;
+    align-items: center;
     justify-content: center;
-}
-
-.date-quick-select {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+    flex-wrap: wrap;
 }
 
 .quick-btn {
@@ -411,7 +406,7 @@ main {
     font-size: 14px;
     transition: all 0.3s ease;
     white-space: nowrap;
-    min-width: 150px;
+    min-width: auto;
 }
 
 .quick-btn:hover {
@@ -425,6 +420,67 @@ main {
     border-color: var(--secondary-color);
     color: white;
     box-shadow: 0 6px 20px rgba(255, 140, 66, 0.4);
+}
+
+.calendar-trigger-btn {
+    padding: 12px 24px;
+    background: transparent;
+    border: 2px solid var(--border-color);
+    color: var(--text-secondary);
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.calendar-trigger-btn:hover {
+    border-color: var(--secondary-color);
+    background: rgba(255, 140, 66, 0.1);
+    color: var(--text-primary);
+}
+
+.calendar-icon {
+    font-size: 16px;
+}
+
+/* Calendar Modal */
+.calendar-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s ease;
+}
+
+.calendar-modal.hidden {
+    display: none;
+}
+
+.calendar-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+}
+
+.calendar-modal-content {
+    position: relative;
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 360px;
+    width: 90%;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+    animation: slideUp 0.3s ease;
 }
 
 .date-calendar {

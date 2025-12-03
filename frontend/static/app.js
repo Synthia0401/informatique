@@ -10,13 +10,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Calendar elements
     const quickBtns = document.querySelectorAll('.quick-btn');
+    const calendarTriggerBtn = document.getElementById('calendar-trigger-btn');
+    const selectedDateDisplay = document.getElementById('selected-date-display');
+    const calendarModal = document.getElementById('calendar-modal');
+    const calendarModalBackdrop = document.querySelector('.calendar-modal-backdrop');
     const calendarMonthSelect = document.getElementById('calendar-month');
     const calendarYearSelect = document.getElementById('calendar-year');
     const calendarPrevBtn = document.getElementById('calendar-prev-month');
     const calendarNextBtn = document.getElementById('calendar-next-month');
     const calendarDaysContainer = document.getElementById('calendar-days-container');
     const modal = document.getElementById('booking-modal');
-    const modalBackdrop = document.querySelector('.modal-backdrop');
+    const modalBackdrop = document.querySelector('#booking-modal .modal-backdrop');
     const modalClose = modal.querySelector('.modal-close');
     const modalCancel = document.getElementById('modal-cancel');
     const bkFilm = document.getElementById('bk-film');
@@ -268,6 +272,34 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // ========================================
+    // DATE SELECTION - CALENDAR MODAL
+    // ========================================
+
+    function openCalendarModal() {
+        calendarModal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeCalendarModal() {
+        calendarModal.classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
+
+    function updateSelectedDateDisplay() {
+        if (selectedDate) {
+            const dateObj = new Date(selectedDate);
+            const options = { weekday: 'short', month: 'short', day: 'numeric' };
+            selectedDateDisplay.textContent = dateObj.toLocaleDateString('fr-FR', options);
+        }
+    }
+
+    // Calendar trigger button
+    calendarTriggerBtn.addEventListener('click', openCalendarModal);
+
+    // Close calendar modal on backdrop click
+    calendarModalBackdrop.addEventListener('click', closeCalendarModal);
+
+    // ========================================
     // DATE SELECTION - CALENDAR
     // ========================================
     let currentDisplayMonth = new Date().getMonth();
@@ -333,8 +365,10 @@ document.addEventListener('DOMContentLoaded', function () {
             dayBtn.addEventListener('click', () => {
                 const iso = currentDate.toISOString().split('T')[0];
                 setSelectedDate(iso);
+                updateSelectedDateDisplay();
                 renderCalendar();
                 updateQuickBtns();
+                closeCalendarModal();
             });
 
             calendarDaysContainer.appendChild(dayBtn);
@@ -391,8 +425,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const iso = newDate.toISOString().split('T')[0];
             setSelectedDate(iso);
+            updateSelectedDateDisplay();
             renderCalendar();
             updateQuickBtns();
+            closeCalendarModal();
         });
     });
 
@@ -438,6 +474,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     setSelectedDate(today.toISOString().split('T')[0]);
+    updateSelectedDateDisplay();
     renderCalendar();
     updateQuickBtns();
 
@@ -505,6 +542,9 @@ document.addEventListener('DOMContentLoaded', function () {
     // Close modal with Escape key
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
+            if (!calendarModal.classList.contains('hidden')) {
+                closeCalendarModal();
+            }
             if (!modal.classList.contains('hidden')) {
                 closeModal();
             }
