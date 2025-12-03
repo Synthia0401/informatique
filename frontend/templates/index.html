@@ -58,12 +58,16 @@
         <!-- Date Selection -->
         <section class="date-selection-section">
             <div class="container">
-                <h2 class="section-title">Choisir une date</h2>
-                <div class="date-buttons">
+                <button class="date-nav-btn date-nav-prev" id="date-prev-btn" aria-label="Dates précédentes">‹</button>
+                <div class="date-buttons" id="date-buttons-container">
                     {% for d in available_dates %}
-                        <button class="date-btn" data-iso="{{ d.iso }}">{{ d.label }}</button>
+                        <button class="date-btn" data-iso="{{ d.iso }}" title="{{ d.label }}">
+                            <span class="date-btn-day">{{ d.label.split(' ')[0] }}</span>
+                            <span class="date-btn-date">{{ d.label.split(' ')[1] }}</span>
+                        </button>
                     {% endfor %}
                 </div>
+                <button class="date-nav-btn date-nav-next" id="date-next-btn" aria-label="Dates suivantes">›</button>
             </div>
         </section>
 

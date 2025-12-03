@@ -7,6 +7,9 @@ document.addEventListener('DOMContentLoaded', function () {
     // DOM Elements - Booking
     // ========================================
     const dateButtons = Array.from(document.querySelectorAll('.date-btn'));
+    const dateButtonsContainer = document.getElementById('date-buttons-container');
+    const datePrevBtn = document.getElementById('date-prev-btn');
+    const dateNextBtn = document.getElementById('date-next-btn');
     const timeButtons = Array.from(document.querySelectorAll('.time-btn'));
     const modal = document.getElementById('booking-modal');
     const modalBackdrop = document.querySelector('.modal-backdrop');
@@ -278,10 +281,42 @@ document.addEventListener('DOMContentLoaded', function () {
     dateButtons.forEach((btn) => {
         btn.addEventListener('click', (event) => {
             setActiveDate(btn);
+            // Scroll to active button
+            btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
             // Add ripple effect
             addRippleEffect(btn, event);
         });
     });
+
+    // Date navigation buttons
+    if (datePrevBtn && dateNextBtn && dateButtonsContainer) {
+        function updateDateNavButtons() {
+            const scrollLeft = dateButtonsContainer.scrollLeft;
+            const scrollWidth = dateButtonsContainer.scrollWidth;
+            const clientWidth = dateButtonsContainer.clientWidth;
+
+            datePrevBtn.disabled = scrollLeft === 0;
+            dateNextBtn.disabled = scrollLeft + clientWidth >= scrollWidth - 1;
+
+            datePrevBtn.style.opacity = scrollLeft === 0 ? '0.5' : '1';
+            dateNextBtn.style.opacity = scrollLeft + clientWidth >= scrollWidth - 1 ? '0.5' : '1';
+        }
+
+        datePrevBtn.addEventListener('click', () => {
+            dateButtonsContainer.scrollBy({ left: -200, behavior: 'smooth' });
+            setTimeout(updateDateNavButtons, 300);
+        });
+
+        dateNextBtn.addEventListener('click', () => {
+            dateButtonsContainer.scrollBy({ left: 200, behavior: 'smooth' });
+            setTimeout(updateDateNavButtons, 300);
+        });
+
+        dateButtonsContainer.addEventListener('scroll', updateDateNavButtons);
+
+        // Initialize button states
+        updateDateNavButtons();
+    }
 
     // ========================================
     // MODAL MANAGEMENT
