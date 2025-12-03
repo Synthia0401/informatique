@@ -22,7 +22,8 @@ MOVIES = [
         "duration": 125,
         "ratings": "PG-13",
         "showtimes": ["14:00", "17:30", "20:45"],
-        "poster": "https://via.placeholder.com/300x450?text=Les+%C3%89toiles+Oubli%C3%A9es",
+        "poster": "https://picsum.photos/300/450?random=1",
+        "color": "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
     },
     {
         "id": 2,
@@ -31,7 +32,8 @@ MOVIES = [
         "duration": 98,
         "ratings": "Tous publics",
         "showtimes": ["13:15", "16:00", "19:00"],
-        "poster": "https://via.placeholder.com/300x450?text=La+M%C3%A9lodie+du+Lac",
+        "poster": "https://picsum.photos/300/450?random=2",
+        "color": "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
     },
     {
         "id": 3,
@@ -40,7 +42,8 @@ MOVIES = [
         "duration": 110,
         "ratings": "PG-13",
         "showtimes": ["15:00", "18:30", "22:00"],
-        "poster": "https://via.placeholder.com/300x450?text=Course+Contre+le+Temps",
+        "poster": "https://picsum.photos/300/450?random=3",
+        "color": "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
     },
     {
         "id": 4,
@@ -49,7 +52,8 @@ MOVIES = [
         "duration": 105,
         "ratings": "Tous publics",
         "showtimes": ["12:45", "15:30", "20:15"],
-        "poster": "https://via.placeholder.com/300x450?text=Les+Enfants+du+Vent",
+        "poster": "https://picsum.photos/300/450?random=4",
+        "color": "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
     },
     {
         "id": 5,
@@ -58,7 +62,8 @@ MOVIES = [
         "duration": 118,
         "ratings": "PG-13",
         "showtimes": ["16:00", "19:45", "23:00"],
-        "poster": "https://via.placeholder.com/300x450?text=Nuit+Blanche",
+        "poster": "https://picsum.photos/300/450?random=5",
+        "color": "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
     },
     {
         "id": 6,
@@ -67,7 +72,8 @@ MOVIES = [
         "duration": 132,
         "ratings": "Tous publics",
         "showtimes": ["11:30", "14:30", "18:00"],
-        "poster": "https://via.placeholder.com/300x450?text=La+Route+des+R%C3%AAves",
+        "poster": "https://picsum.photos/300/450?random=6",
+        "color": "linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)",
     },
     {
         "id": 7,
@@ -76,7 +82,8 @@ MOVIES = [
         "duration": 107,
         "ratings": "PG-13",
         "showtimes": ["13:00", "17:00", "21:00"],
-        "poster": "https://via.placeholder.com/300x450?text=Op%C3%A9ration+Minuit",
+        "poster": "https://picsum.photos/300/450?random=7",
+        "color": "linear-gradient(135deg, #ff9a56 0%, #ff6a88 100%)",
     },
     {
         "id": 8,
@@ -85,7 +92,8 @@ MOVIES = [
         "duration": 95,
         "ratings": "Tous publics",
         "showtimes": ["12:00", "15:00", "18:30"],
-        "poster": "https://via.placeholder.com/300x450?text=Coeurs+en+Hiver",
+        "poster": "https://picsum.photos/300/450?random=8",
+        "color": "linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)",
     },
     {
         "id": 9,
@@ -94,7 +102,8 @@ MOVIES = [
         "duration": 140,
         "ratings": "16+",
         "showtimes": ["17:15", "20:30"],
-        "poster": "https://via.placeholder.com/300x450?text=M%C3%A9moires+Perdues",
+        "poster": "https://picsum.photos/300/450?random=9",
+        "color": "linear-gradient(135deg, #2e2e78 0%, #16213e 100%)",
     },
     {
         "id": 10,
@@ -103,7 +112,8 @@ MOVIES = [
         "duration": 123,
         "ratings": "Tous publics",
         "showtimes": ["10:45", "14:15", "19:30"],
-        "poster": "https://via.placeholder.com/300x450?text=Rivages+lointains",
+        "poster": "https://picsum.photos/300/450?random=10",
+        "color": "linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)",
     },
 ]
 

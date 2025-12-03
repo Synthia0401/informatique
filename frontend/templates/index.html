@@ -2,148 +2,162 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>CinéMax - Accueil</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CinéMax - Réservez vos places</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
 </head>
 <body>
-    <header>
-        <h1>CinéMax</h1>
-        <p class="tagline">Films, séances et tarifs</p>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="brand">
+                <span class="logo-icon">🎬</span>
+                <span class="brand-text">CinéMax</span>
+            </div>
+            <div class="nav-search">
+                <input type="text" id="search" placeholder="Rechercher un film..." class="search-input">
+                <span class="search-icon">🔍</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="hero">
+        <div class="hero-content">
+            <h1 class="hero-title">Vivez l'Expérience du Cinéma</h1>
+            <p class="hero-subtitle">Découvrez nos films, consultez les séances et réservez vos places</p>
+            <a href="#movies" class="cta-button">Parcourir les films</a>
+        </div>
+        <div class="hero-background"></div>
     </header>
 
-    <section class="prices">
-        <h2>Tarifs</h2>
-        <ul>
-            <li>Adulte : {{ prices.adult }} €</li>
-            <li>Enfant : {{ prices.child }} €</li>
-            <li>Senior : {{ prices.senior }} €</li>
-        </ul>
-    </section>
-
-    <section class="controls">
-        <meta charset="UTF-8">
-        <title>CinéMax - Accueil</title>
-        <link rel="preconnect" href="https://fonts.gstatic.com">
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-        <meta name="viewport" content="width=device-width,initial-scale=1">
-    </head>
-    <body>
-        <nav class="topbar">
+    <main>
+        <!-- Prices Section -->
+        <section class="prices-section">
             <div class="container">
-                <div class="brand">CinéMax</div>
-                <div class="nav-actions">
-                    <input id="search" placeholder="Rechercher un film..." />
-                </div>
-            </div>
-        </nav>
-
-        <header class="hero">
-            <div class="container">
-                <h1>Bienvenue à CinéMax</h1>
-                <p class="lead">Consultez les séances, découvrez les films et réservez vos places.</p>
-                <div class="hero-cta">
-                    <a href="#movies" class="btn primary">Voir les séances</a>
-                </div>
-            </div>
-        </header>
-
-        <main class="container">
-            <section class="prices card small">
-                <h2>Tarifs</h2>
+                <h2 class="section-title">Nos Tarifs</h2>
                 <div class="prices-grid">
-                    <div class="price-item"><strong>Adulte</strong><span>{{ prices.adult }} €</span></div>
-                    <div class="price-item"><strong>Enfant</strong><span>{{ prices.child }} €</span></div>
-                    <div class="price-item"><strong>Senior</strong><span>{{ prices.senior }} €</span></div>
+                    <div class="price-card">
+                        <div class="price-icon">👨</div>
+                        <h3>Adulte</h3>
+                        <p class="price-value">{{ prices.adult }} €</p>
+                    </div>
+                    <div class="price-card">
+                        <div class="price-icon">👧</div>
+                        <h3>Enfant</h3>
+                        <p class="price-value">{{ prices.child }} €</p>
+                    </div>
+                    <div class="price-card">
+                        <div class="price-icon">👴</div>
+                        <h3>Sénior</h3>
+                        <p class="price-value">{{ prices.senior }} €</p>
+                    </div>
                 </div>
-            </section>
+            </div>
+        </section>
 
-            <section class="controls">
-                <label for="date-select">Choisir la date :</label>
-                <div id="date-select" class="date-buttons">
+        <!-- Date Selection -->
+        <section class="date-selection-section">
+            <div class="container">
+                <h2 class="section-title">Choisir une date</h2>
+                <div class="date-buttons">
                     {% for d in available_dates %}
                         <button class="date-btn" data-iso="{{ d.iso }}">{{ d.label }}</button>
                     {% endfor %}
                 </div>
-            </section>
+            </div>
+        </section>
 
-            <section id="movies" class="movies">
-                <h2>À l'affiche</h2>
-                <div class="grid">
+        <!-- Movies Section -->
+        <section id="movies" class="movies-section">
+            <div class="container">
+                <h2 class="section-title">À l'affiche</h2>
+                <div class="movies-grid">
                     {% for m in movies %}
-                    <article class="card movie-card" data-title="{{ m.title }}">
-                        <div class="poster" aria-hidden="true">
-                            <img src="{{ m.poster }}" alt="Affiche {{ m.title }}">
+                    <div class="movie-card" data-title="{{ m.title }}" data-color="{{ m.color }}">
+                        <div class="movie-poster">
+                            <img src="{{ m.poster }}" alt="Affiche {{ m.title }}" loading="lazy">
+                            <div class="movie-overlay">
+                                <span class="rating">{{ m.ratings }}</span>
+                            </div>
                         </div>
-                        <div class="movie-body">
+                        <div class="movie-info">
                             <h3 class="movie-title">{{ m.title }}</h3>
-                            <p class="meta">{{ m.duration }} min • {{ m.ratings }}</p>
-                            <p class="desc">{{ m.description }}</p>
-
+                            <p class="movie-meta">{{ m.duration }} min</p>
+                            <p class="movie-description">{{ m.description }}</p>
                             <div class="showtimes">
-                                <strong>Séances :</strong>
-                                <div class="times-list" data-movie-id="{{ m.id }}">
+                                <p class="showtimes-label">Séances disponibles :</p>
+                                <div class="times-grid">
                                     {% for s in m.showtimes %}
-                                        <button class="time-btn outline" data-time="{{ s }}" data-movie-id="{{ m.id }}" data-title="{{ m.title }}">{{ s }}</button>
+                                        <button class="time-btn" data-time="{{ s }}" data-movie-id="{{ m.id }}" data-title="{{ m.title }}">{{ s }}</button>
                                     {% endfor %}
                                 </div>
                             </div>
-
                         </div>
-                    </article>
+                    </div>
                     {% endfor %}
                 </div>
-            </section>
-        </main>
-
-        <footer class="site-footer">
-            <div class="container">
-                <div>&copy; {{ current_year }} CinéMax</div>
-                <div class="small">Site démo — pas de paiement réel</div>
             </div>
-        </footer>
+        </section>
+    </main>
 
-        <!-- Modal reservation -->
-        <div id="booking-modal" class="modal hidden" role="dialog" aria-hidden="true">
-            <div class="modal-backdrop"></div>
-            <div class="modal-panel">
-                <button class="modal-close" aria-label="Fermer">✕</button>
-                <h3 id="modal-title">Réserver</h3>
-                <form id="booking-form">
-                    <div class="form-row">
-                        <label>Film</label>
-                        <input type="text" id="bk-film" readonly />
-                    </div>
-                    <div class="form-row half">
-                        <label>Date</label>
-                        <input type="text" id="bk-date" readonly />
-                    </div>
-                    <div class="form-row half">
-                        <label>Séance</label>
-                        <input type="text" id="bk-time" readonly />
-                    </div>
-                    <div class="form-row">
-                        <label>Nom</label>
-                        <input type="text" id="bk-name" placeholder="Votre nom" required />
-                    </div>
-                    <div class="form-row">
-                        <label>Places</label>
-                        <select id="bk-count">
-                            <option>1</option>
-                            <option>2</option>
-                            <option>3</option>
-                            <option>4</option>
-                        </select>
-                    </div>
-                    <div class="form-actions">
-                        <button type="submit" class="btn primary">Confirmer la réservation</button>
-                        <button type="button" class="btn" id="modal-cancel">Annuler</button>
-                    </div>
-                </form>
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <p>&copy; {{ current_year }} CinéMax - Tous droits réservés</p>
+                <p class="footer-subtitle">Plateforme de réservation de cinéma</p>
             </div>
         </div>
+    </footer>
 
-        <script src="{{ url_for('static', filename='app.js') }}"></script>
-    </body>
-    </html>
+    <!-- Booking Modal -->
+    <div id="booking-modal" class="modal hidden" role="dialog" aria-hidden="true" aria-labelledby="modal-title">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <button class="modal-close" aria-label="Fermer la modale">✕</button>
+            <h2 id="modal-title" class="modal-title">Réserver vos places</h2>
+            <form id="booking-form" class="booking-form">
+                <div class="form-group">
+                    <label for="bk-film">Film</label>
+                    <input type="text" id="bk-film" readonly>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="bk-date">Date</label>
+                        <input type="text" id="bk-date" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="bk-time">Séance</label>
+                        <input type="text" id="bk-time" readonly>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="bk-name">Votre nom</label>
+                    <input type="text" id="bk-name" placeholder="Jean Dupont" required>
+                </div>
+                <div class="form-group">
+                    <label for="bk-count">Nombre de places</label>
+                    <select id="bk-count">
+                        <option value="1">1 place</option>
+                        <option value="2">2 places</option>
+                        <option value="3">3 places</option>
+                        <option value="4">4 places</option>
+                        <option value="5">5 places</option>
+                        <option value="6">6 places</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Confirmer la réservation</button>
+                    <button type="button" class="btn btn-secondary" id="modal-cancel">Annuler</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
