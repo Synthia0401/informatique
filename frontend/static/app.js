@@ -154,7 +154,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 updateUIForLoggedIn();
                 closeAuthModal();
                 accountMenu.classList.add('hidden');
-                showSuccessNotification(`Bienvenue ${currentUser.prenom}!`);
+                showSuccessNotification(`Bienvenue au CinéMax, ${currentUser.prenom}!`);
             } else {
                 errorEl.textContent = data.error;
                 errorEl.classList.remove('hidden');
@@ -172,13 +172,16 @@ document.addEventListener('DOMContentLoaded', function () {
         const password = document.getElementById('register-password').value;
         const nom = document.getElementById('register-nom').value;
         const prenom = document.getElementById('register-prenom').value;
+        const sexe = document.getElementById('register-sexe').value;
+        const ville = document.getElementById('register-ville').value;
+        const habitation = document.getElementById('register-habitation').value;
         const errorEl = document.getElementById('register-error');
 
         try {
             const response = await fetch('/api/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password, nom, prenom })
+                body: JSON.stringify({ email, password, nom, prenom, sexe, ville, habitation })
             });
 
             const data = await response.json();
@@ -188,7 +191,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 updateUIForLoggedIn();
                 closeAuthModal();
                 accountMenu.classList.add('hidden');
-                showSuccessNotification(`Compte créé! Bienvenue ${currentUser.prenom}!`);
+                showSuccessNotification(`Bienvenue au CinéMax, ${currentUser.prenom}!`);
             } else {
                 errorEl.textContent = data.error;
                 errorEl.classList.remove('hidden');
@@ -200,8 +203,16 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // Tab switching
-    loginTabBtn.addEventListener('click', showLoginForm);
-    registerTabBtn.addEventListener('click', showRegisterForm);
+    loginTabBtn.addEventListener('click', () => {
+        showLoginForm();
+        openAuthModal();
+        accountMenu.classList.add('hidden');
+    });
+    registerTabBtn.addEventListener('click', () => {
+        showRegisterForm();
+        openAuthModal();
+        accountMenu.classList.add('hidden');
+    });
 
     // Logout
     logoutBtn.addEventListener('click', async () => {
@@ -428,11 +439,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     position: fixed;
                     bottom: 20px;
                     right: 20px;
-                    background: #2ecc71;
+                    background: linear-gradient(135deg, #ff8c42 0%, #ffb347 100%);
                     color: white;
                     padding: 16px 20px;
                     border-radius: 8px;
-                    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+                    box-shadow: 0 10px 30px rgba(255, 140, 66, 0.5);
                     z-index: 300;
                     animation: slideInRight 0.3s ease, slideOutRight 0.3s ease 3.7s forwards;
                 }

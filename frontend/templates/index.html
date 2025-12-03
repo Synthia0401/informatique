@@ -44,38 +44,17 @@
     <!-- Hero Section -->
     <header class="hero">
         <div class="hero-content">
-            <h1 class="hero-title">Vivez l'Expérience du Cinéma</h1>
+            <h1 class="hero-title">Bienvenue au CinéMax</h1>
             <p class="hero-subtitle">Découvrez nos films, consultez les séances et réservez vos places</p>
-            <a href="#movies" class="cta-button">Parcourir les films</a>
+            <div class="hero-buttons">
+                <a href="#movies" class="cta-button">Parcourir les films</a>
+                <a href="#prices" class="cta-button cta-secondary">Nos Tarifs</a>
+            </div>
         </div>
         <div class="hero-background"></div>
     </header>
 
     <main>
-        <!-- Prices Section -->
-        <section class="prices-section">
-            <div class="container">
-                <h2 class="section-title">Nos Tarifs</h2>
-                <div class="prices-grid">
-                    <div class="price-card">
-                        <div class="price-icon">👨</div>
-                        <h3>Adulte</h3>
-                        <p class="price-value">{{ prices.adult }} €</p>
-                    </div>
-                    <div class="price-card">
-                        <div class="price-icon">👧</div>
-                        <h3>Enfant</h3>
-                        <p class="price-value">{{ prices.child }} €</p>
-                    </div>
-                    <div class="price-card">
-                        <div class="price-icon">👴</div>
-                        <h3>Sénior</h3>
-                        <p class="price-value">{{ prices.senior }} €</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
         <!-- Date Selection -->
         <section class="date-selection-section">
             <div class="container">
@@ -103,8 +82,15 @@
                         </div>
                         <div class="movie-info">
                             <h3 class="movie-title">{{ m.title }}</h3>
-                            <p class="movie-meta">{{ m.duration }} min</p>
+                            <p class="movie-director"><strong>Réalisateur:</strong> {{ m.director }}</p>
+                            <p class="movie-cast"><strong>Acteurs:</strong> {{ m.cast }}</p>
+                            <p class="movie-meta">⏱️ {{ m.duration }} min | {{ m.ratings }}</p>
                             <p class="movie-description">{{ m.description }}</p>
+                            <div class="movie-links">
+                                {% if m.trailer %}
+                                    <a href="{{ m.trailer }}" target="_blank" class="trailer-btn">🎬 Bande-annonce</a>
+                                {% endif %}
+                            </div>
                             <div class="showtimes">
                                 <p class="showtimes-label">Séances disponibles :</p>
                                 <div class="times-grid">
@@ -116,6 +102,43 @@
                         </div>
                     </div>
                     {% endfor %}
+                </div>
+            </div>
+        </section>
+
+        <!-- Prices Section -->
+        <section id="prices" class="prices-section">
+            <div class="container">
+                <h2 class="section-title">Nos Tarifs</h2>
+                <div class="prices-table-wrapper">
+                    <table class="prices-table">
+                        <tbody>
+                            <tr>
+                                <td class="price-category">
+                                    <span class="price-icon">👨</span>
+                                    <span class="price-label">Adulte</span>
+                                </td>
+                                <td class="price-availability">Tous les jours</td>
+                                <td class="price-amount">{{ prices.adult }} €</td>
+                            </tr>
+                            <tr>
+                                <td class="price-category">
+                                    <span class="price-icon">👧</span>
+                                    <span class="price-label">Enfant</span>
+                                </td>
+                                <td class="price-availability">Tous les jours</td>
+                                <td class="price-amount">{{ prices.child }} €</td>
+                            </tr>
+                            <tr>
+                                <td class="price-category">
+                                    <span class="price-icon">👴</span>
+                                    <span class="price-label">Sénior</span>
+                                </td>
+                                <td class="price-availability">Tous les jours</td>
+                                <td class="price-amount">{{ prices.senior }} €</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </section>
@@ -177,6 +200,12 @@
         <div class="modal-content auth-modal">
             <button class="modal-close" aria-label="Fermer la modale">✕</button>
 
+            <!-- Tab Buttons -->
+            <div id="account-logged-out" style="margin: 0 -32px 0 -32px; margin-bottom: 0;">
+                <button id="login-tab-btn" class="tab-btn active">Connexion</button>
+                <button id="register-tab-btn" class="tab-btn">Créer un compte</button>
+            </div>
+
             <!-- Login Form -->
             <div id="login-form-section" class="auth-section">
                 <h2 class="modal-title">Connexion</h2>
@@ -215,6 +244,25 @@
                     <div class="form-group">
                         <label for="register-password">Mot de passe</label>
                         <input type="password" id="register-password" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="register-sexe">Sexe</label>
+                            <select id="register-sexe" required>
+                                <option value="">--Sélectionner--</option>
+                                <option value="M">Homme</option>
+                                <option value="F">Femme</option>
+                                <option value="O">Autre</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="register-ville">Ville</label>
+                            <input type="text" id="register-ville" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-habitation">Adresse</label>
+                        <input type="text" id="register-habitation" required>
                     </div>
                     <button type="submit" class="btn btn-primary" style="width: 100%;">Créer mon compte</button>
                     <div id="register-error" class="error-message hidden"></div>

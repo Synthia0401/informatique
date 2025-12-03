@@ -28,6 +28,9 @@ def init_db():
                 password TEXT NOT NULL,
                 nom TEXT NOT NULL,
                 prenom TEXT NOT NULL,
+                sexe TEXT,
+                ville TEXT,
+                habitation TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ''')
@@ -52,6 +55,28 @@ def init_db():
 
 init_db()
 
+# Create test user account
+def create_test_user():
+    """Create a test user for demonstration"""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+
+        # Check if test user already exists
+        cursor.execute("SELECT id FROM users WHERE email = ?", ("test@cinema.com",))
+        if cursor.fetchone() is None:
+            hashed_password = generate_password_hash("test1234")
+            cursor.execute(
+                "INSERT INTO users (email, password, nom, prenom, sexe, ville, habitation) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                ("test@cinema.com", hashed_password, "Test", "User", "M", "Paris", "123 Rue de la Paix")
+            )
+            conn.commit()
+        conn.close()
+    except Exception as e:
+        pass
+
+create_test_user()
+
 # Sample data for the cinema
 PRICES = {
     "adult": 9.0,
@@ -62,102 +87,132 @@ PRICES = {
 MOVIES = [
     {
         "id": 1,
-        "title": "Les Étoiles Oubliées",
-        "description": "Un voyage émouvant à travers l'espace et la mémoire.",
-        "duration": 125,
-        "ratings": "PG-13",
+        "title": "Inside Out 2",
+        "director": "Kelsey Mann",
+        "cast": "Amy Poehler, Phyllis Smith, Tony Hale",
+        "description": "Riley, maintenant adolescente, voit arriver de nouvelles émotions — un portrait touchant de l'adolescence et de la vie intérieure.",
+        "duration": 93,
+        "ratings": "Tous publics",
         "showtimes": ["14:00", "17:30", "20:45"],
-        "poster": "https://picsum.photos/300/450?random=1",
+        "poster": "https://static1.srcdn.com/wordpress/wp-content/uploads/2024/03/inside-out-2-poster-showing-joy-and-the-other-emotions-squished-together.jpeg",
+        "trailer": "https://www.youtube.com/watch?v=ttdNckgKcq4",
         "color": "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
     },
     {
         "id": 2,
-        "title": "La Mélodie du Lac",
-        "description": "Une histoire d'amitié et de musique dans un village côtier.",
-        "duration": 98,
+        "title": "Moana 2",
+        "director": "David Derrick Jr., Jason Hand, Dana Ledoux Miller",
+        "cast": "Dwayne Johnson, Auli'i Cravalho, Rachel House",
+        "description": "Moana et Maui repartent en mer pour trouver l'île perdue de Motufetu et lever une malédiction pour reconnecter les peuples de l'océan.",
+        "duration": 100,
         "ratings": "Tous publics",
         "showtimes": ["13:15", "16:00", "19:00"],
-        "poster": "https://picsum.photos/300/450?random=2",
+        "poster": "https://pics.filmaffinity.com/moana_2-862180530-large.jpg",
+        "trailer": "https://www.youtube.com/watch?v=fCX_cdqkvPI",
         "color": "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
     },
     {
         "id": 3,
-        "title": "Course Contre le Temps",
-        "description": "Thriller haletant où chaque seconde compte.",
-        "duration": 110,
-        "ratings": "PG-13",
+        "title": "Despicable Me 4",
+        "director": "Chris Renaud",
+        "cast": "Steve Carell, Kristen Wiig, Pierre Coffin",
+        "description": "Gru et les Minions reviennent pour une nouvelle aventure pleine d'humour, d'action et de chaos.",
+        "duration": 94,
+        "ratings": "Tous publics",
         "showtimes": ["15:00", "18:30", "22:00"],
-        "poster": "https://picsum.photos/300/450?random=3",
+        "poster": "https://tse1.mm.bing.net/th/id/OIP.7Gc8gXSWuNcfgVYqrqsocQHaJQ?cb=ucfimg2&ucfimg=1&rs=1&pid=ImgDetMain&o=7&rm=3",
+        "trailer": "https://www.youtube.com/watch?v=2i776vPid38",
         "color": "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
     },
     {
         "id": 4,
-        "title": "Les Enfants du Vent",
-        "description": "Portrait d'une famille et des secrets qu'elle garde.",
-        "duration": 105,
-        "ratings": "Tous publics",
+        "title": "Deadpool & Wolverine",
+        "director": "Shawn Levy",
+        "cast": "Ryan Reynolds, Hugh Jackman, Emma Corrin",
+        "description": "Deadpool est recruté par la TVA pour sauver le multivers — il fait équipe avec Wolverine pour tenter de sauver leur univers.",
+        "duration": 127,
+        "ratings": "12+",
         "showtimes": ["12:45", "15:30", "20:15"],
-        "poster": "https://picsum.photos/300/450?random=4",
+        "poster": "https://image.tmdb.org/t/p/w1280/jbwYaoYWZwxtPP76AZnfYKQjCEB.jpg",
+        "trailer": "https://www.youtube.com/watch?v=L7AX0BD-sAU",
         "color": "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
     },
     {
         "id": 5,
-        "title": "Nuit Blanche",
-        "description": "Enquête urbaine à couper le souffle.",
-        "duration": 118,
-        "ratings": "PG-13",
+        "title": "Dune: Part Two",
+        "director": "Denis Villeneuve",
+        "cast": "Timothée Chalamet, Zendaya, Rebecca Ferguson",
+        "description": "Paul Atreides s'allie aux Fremen pour libérer Arrakis et mener une guerre contre la Maison Harkonnen.",
+        "duration": 166,
+        "ratings": "12+",
         "showtimes": ["16:00", "19:45", "23:00"],
-        "poster": "https://picsum.photos/300/450?random=5",
+        "poster": "https://m.media-amazon.com/images/M/MV5BNTc0YmQxMjEtODI5MC00NjFiLTlkMWUtOGQ5NjFmYWUyZGJhXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg",
+        "trailer": "https://www.youtube.com/watch?v=Tc-AM9F0gK8",
         "color": "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
     },
     {
         "id": 6,
-        "title": "La Route des Rêves",
-        "description": "Aventure poétique sur fond de road-trip.",
-        "duration": 132,
+        "title": "Wicked",
+        "director": "Jon M. Chu",
+        "cast": "Cynthia Erivo, Ariana Grande, Jeff Goldblum",
+        "description": "Une réimagination de l'univers d'Oz : avant le Magicien d'Oz, l'histoire des sorcières Elphaba et Glinda.",
+        "duration": 160,
         "ratings": "Tous publics",
         "showtimes": ["11:30", "14:30", "18:00"],
-        "poster": "https://picsum.photos/300/450?random=6",
+        "poster": "https://m.media-amazon.com/images/M/MV5BN2Q4Yjk0YTQtZjYyMC00YTczLWFhZDktOWQyYzRlYzgwMWM1XkEyXkFqcGc@._V1_.jpg",
+        "trailer": "https://www.youtube.com/watch?v=6Rsg9G-6ZFo",
         "color": "linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)",
     },
     {
         "id": 7,
-        "title": "Opération Minuit",
-        "description": "Action non-stop et retournements inattendus.",
-        "duration": 107,
-        "ratings": "PG-13",
+        "title": "Twisters",
+        "director": "Lee Isaac Chung",
+        "cast": "Daisy Edgar-Jones, Glen Powell, Anthony Ramos",
+        "description": "Un groupe de personnes tente de survivre à une série de tornades dévastatrices — action, survie et chaos climatique.",
+        "duration": 123,
+        "ratings": "12+",
         "showtimes": ["13:00", "17:00", "21:00"],
-        "poster": "https://picsum.photos/300/450?random=7",
+        "poster": "https://m.media-amazon.com/images/S/pv-target-images/e52894a5aebb68b977e8d61145e5b555653ef5a6ac8d162a05cc13469b24d8e0.jpg",
+        "trailer": "https://www.youtube.com/watch?v=Zcp8L7NBKiI",
         "color": "linear-gradient(135deg, #ff9a56 0%, #ff6a88 100%)",
     },
     {
         "id": 8,
-        "title": "Coeurs en Hiver",
-        "description": "Comédie romantique tendre et légère.",
-        "duration": 95,
-        "ratings": "Tous publics",
+        "title": "Furiosa: A Mad Max Saga",
+        "director": "George Miller",
+        "cast": "Anya Taylor-Joy, Chris Hemsworth, Tom Burke",
+        "description": "Préquelle post-apocalyptique de Mad Max: Fury Road — origine de Furiosa, survie, désert, violence.",
+        "duration": 148,
+        "ratings": "12+",
         "showtimes": ["12:00", "15:00", "18:30"],
-        "poster": "https://picsum.photos/300/450?random=8",
+        "poster": "https://posterspy.com/wp-content/uploads/2023/12/FURIOSA-a-mad-max-saga.jpg",
+        "trailer": "https://www.youtube.com/watch?v=g3tHGZVKE6c",
         "color": "linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)",
     },
     {
         "id": 9,
-        "title": "Mémoires Perdues",
-        "description": "Drame psychologique et quête d'identité.",
-        "duration": 140,
-        "ratings": "16+",
+        "title": "Godzilla x Kong: The New Empire",
+        "director": "Adam Wingard",
+        "cast": "Rebecca Hall, Brian Tyree Henry, Dan Stevens",
+        "description": "Suite du crossover Godzilla/Kong — monstres titanesques, batailles épiques, chaos monumental.",
+        "duration": 145,
+        "ratings": "12+",
         "showtimes": ["17:15", "20:30"],
-        "poster": "https://picsum.photos/300/450?random=9",
+        "poster": "https://static1.srcdn.com/wordpress/wp-content/uploads/2024/07/godzilla-x-kong-the-new-empire-film-poster.jpg",
+        "trailer": "https://www.youtube.com/watch?v=_NKsmb5R0CU",
         "color": "linear-gradient(135deg, #2e2e78 0%, #16213e 100%)",
     },
     {
         "id": 10,
-        "title": "Rivages lointains",
-        "description": "Épopée maritime et destin croisé.",
-        "duration": 123,
+        "title": "Kung Fu Panda 4",
+        "director": "Mike Mitchell",
+        "cast": "Jack Black, Furious Five, Ian McShane (voix)",
+        "description": "Po, le guerrier-dragon, doit désormais trouver un successeur et guider la Vallée de la Paix — humour, aventure et action.",
+        "duration": 94,
         "ratings": "Tous publics",
         "showtimes": ["10:45", "14:15", "19:30"],
-        "poster": "https://picsum.photos/300/450?random=10",
+        "poster": "https://image.tmdb.org/t/p/w500/kDp1vUBnMpe8ak4rjgl3cLELqjU.jpg",
+        "trailer": "https://www.youtube.com/watch?v=lN4gEmC0FUo",
         "color": "linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)",
     },
 ]
@@ -198,6 +253,9 @@ def register():
     password = data.get("password")
     nom = data.get("nom")
     prenom = data.get("prenom")
+    sexe = data.get("sexe")
+    ville = data.get("ville")
+    habitation = data.get("habitation")
 
     if not all([email, password, nom, prenom]):
         return jsonify({"success": False, "error": "Tous les champs sont requis"}), 400
@@ -208,8 +266,8 @@ def register():
 
         hashed_password = generate_password_hash(password)
         cursor.execute(
-            "INSERT INTO users (email, password, nom, prenom) VALUES (?, ?, ?, ?)",
-            (email, hashed_password, nom, prenom)
+            "INSERT INTO users (email, password, nom, prenom, sexe, ville, habitation) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (email, hashed_password, nom, prenom, sexe, ville, habitation)
         )
         conn.commit()
         user_id = cursor.lastrowid

@@ -14,23 +14,23 @@ html {
 
 body {
     font-family: 'Poppins', sans-serif;
-    background-color: #0f1419;
-    color: #e0e0e0;
+    background: linear-gradient(135deg, #3D0000 0%, #5a1a1a 50%, #6b2e2e 100%);
+    color: #f5f5f5;
     line-height: 1.6;
     overflow-x: hidden;
 }
 
 :root {
-    --primary-color: #ff6b6b;
-    --secondary-color: #4ecdc4;
-    --accent-color: #ffd93d;
-    --dark-bg: #0f1419;
-    --card-bg: #1a1f2e;
-    --border-color: #2d3748;
-    --text-primary: #e0e0e0;
-    --text-secondary: #a0aec0;
-    --shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-    --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.15);
+    --primary-color: #ff6b4a;
+    --secondary-color: #ff8c42;
+    --accent-color: #ffb347;
+    --dark-bg: #3D0000;
+    --card-bg: #5a1a1a;
+    --border-color: #8b3a3a;
+    --text-primary: #f5f5f5;
+    --text-secondary: #e8c4b0;
+    --shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 /* ========================================
@@ -166,14 +166,16 @@ body {
 
 .hero-title {
     font-family: 'Playfair Display', serif;
-    font-size: 56px;
+    font-size: 72px;
     font-weight: 700;
     margin-bottom: 20px;
-    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color), var(--accent-color));
+    background: linear-gradient(135deg, #ff8c42 0%, #ffb347 50%, #ff9f43 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
     animation: slideInDown 0.8s ease-out;
+    letter-spacing: -2px;
+    text-shadow: 0 2px 10px rgba(255, 107, 74, 0.3);
 }
 
 .hero-subtitle {
@@ -208,19 +210,37 @@ body {
 .cta-button {
     display: inline-block;
     padding: 16px 40px;
-    background: linear-gradient(135deg, var(--primary-color), #ff5252);
+    background: linear-gradient(135deg, #ff8c42 0%, #ffb347 100%);
     color: white;
     text-decoration: none;
     border-radius: 8px;
     font-weight: 600;
     transition: all 0.3s ease;
-    box-shadow: 0 10px 30px rgba(255, 107, 107, 0.3);
+    box-shadow: 0 10px 30px rgba(255, 140, 66, 0.4);
     animation: slideInUp 0.8s ease-out 0.4s both;
+    font-family: 'Playfair Display', serif;
+    font-size: 16px;
 }
 
 .cta-button:hover {
     transform: translateY(-3px);
-    box-shadow: 0 15px 40px rgba(255, 107, 107, 0.4);
+    box-shadow: 0 15px 40px rgba(255, 140, 66, 0.6);
+}
+
+.hero-buttons {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.cta-secondary {
+    background: linear-gradient(135deg, #ff6b4a 0%, #ff8c42 100%);
+    box-shadow: 0 10px 30px rgba(255, 107, 74, 0.4);
+}
+
+.cta-secondary:hover {
+    box-shadow: 0 15px 40px rgba(255, 107, 74, 0.6);
 }
 
 .hero-background {
@@ -247,7 +267,7 @@ main {
 
 .section-title {
     font-family: 'Playfair Display', serif;
-    font-size: 42px;
+    font-size: 48px;
     font-weight: 700;
     text-align: center;
     margin-bottom: 50px;
@@ -255,6 +275,7 @@ main {
     position: relative;
     display: inline-block;
     width: 100%;
+    letter-spacing: -1px;
 }
 
 .section-title::after {
@@ -472,23 +493,60 @@ main {
 .movie-title {
     font-size: 18px;
     font-weight: 700;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
     color: var(--text-primary);
     line-height: 1.3;
+}
+
+.movie-director,
+.movie-cast {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    line-height: 1.4;
+}
+
+.movie-director strong,
+.movie-cast strong {
+    color: var(--accent-color);
+    font-weight: 600;
 }
 
 .movie-meta {
     font-size: 13px;
     color: var(--text-secondary);
     margin-bottom: 12px;
+    font-weight: 600;
 }
 
 .movie-description {
     font-size: 13px;
     color: var(--text-secondary);
-    margin-bottom: 20px;
+    margin-bottom: 12px;
     line-height: 1.5;
     flex: 1;
+}
+
+.movie-links {
+    margin-bottom: 16px;
+}
+
+.trailer-btn {
+    display: inline-block;
+    padding: 8px 12px;
+    background: rgba(255, 217, 61, 0.15);
+    color: var(--accent-color);
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid rgba(255, 217, 61, 0.3);
+    transition: all 0.2s ease;
+}
+
+.trailer-btn:hover {
+    background: rgba(255, 217, 61, 0.25);
+    border-color: var(--accent-color);
 }
 
 .showtimes {
@@ -917,53 +975,146 @@ main {
     background: rgba(255, 107, 107, 0.2);
 }
 
-.tab-btn {
-    flex: 1;
-    padding: 12px;
-    background: transparent;
-    border: none;
-    color: var(--text-secondary);
-    cursor: pointer;
-    font-family: 'Poppins', sans-serif;
-    font-weight: 600;
-    font-size: 13px;
-    transition: all 0.2s ease;
-    border-bottom: 2px solid transparent;
-}
-
-.tab-btn.active {
-    color: var(--primary-color);
-    border-bottom-color: var(--primary-color);
-}
-
-#account-logged-out {
-    display: flex;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.auth-section {
-    padding: 16px;
-}
-
-.auth-section.hidden {
-    display: none;
-}
-
 /* ========================================
    AUTHENTICATION MODAL
    ======================================== */
 
 .auth-modal {
     max-width: 420px;
+    background: linear-gradient(180deg, #1a1f2e 0%, #141820 100%);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.auth-modal .modal-title {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 24px;
+    color: var(--text-primary);
+    letter-spacing: -0.5px;
+}
+
+.auth-section {
+    padding: 32px;
+}
+
+.auth-section.hidden {
+    display: none;
+}
+
+#account-logged-out {
+    display: flex;
+    border-bottom: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 16px 20px;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    border-bottom: 3px solid transparent;
+    text-transform: capitalize;
+    text-align: center;
+}
+
+.tab-btn:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.tab-btn.active {
+    color: var(--accent-color);
+    border-bottom-color: var(--accent-color);
+    background: rgba(255, 217, 61, 0.08);
+}
+
+.auth-modal .booking-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.auth-modal .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.auth-modal .form-group label {
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.auth-modal .form-group input,
+.auth-modal .form-group select {
+    padding: 12px 14px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-family: 'Poppins', sans-serif;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.auth-modal .form-group input:focus,
+.auth-modal .form-group select:focus {
+    outline: none;
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(255, 217, 61, 0.1);
+}
+
+.auth-modal .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.auth-modal .btn-primary {
+    padding: 14px 24px;
+    background: var(--accent-color);
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 8px;
+}
+
+.auth-modal .btn-primary:hover {
+    background: #ffc107;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(255, 217, 61, 0.3);
+}
+
+.auth-modal .btn-primary:active {
+    transform: translateY(0);
 }
 
 .error-message {
     color: #ff6b6b;
     font-size: 13px;
-    padding: 10px;
+    padding: 12px 14px;
     background: rgba(255, 107, 107, 0.1);
+    border: 1px solid rgba(255, 107, 107, 0.3);
     border-radius: 6px;
-    margin-top: 10px;
+    margin-top: 12px;
+    border-left: 3px solid #ff6b6b;
 }
 
 .error-message.hidden {
