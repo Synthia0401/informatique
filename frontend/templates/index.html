@@ -22,39 +22,128 @@
     </section>
 
     <section class="controls">
-        <label for="date-select">Choisir la date :</label>
-        <div id="date-select" class="date-buttons">
-            {% for d in available_dates %}
-                <button class="date-btn" data-iso="{{ d.iso }}">{{ d.label }}</button>
-            {% endfor %}
-        </div>
-    </section>
-
-    <section class="movies">
-        <h2>À l'affiche</h2>
-        <div class="grid">
-            {% for m in movies %}
-            <article class="card">
-                <h3>{{ m.title }}</h3>
-                <p class="meta">{{ m.duration }} min • {{ m.ratings }}</p>
-                <p class="desc">{{ m.description }}</p>
-
-                <div class="showtimes">
-                    <strong>Séances :</strong>
-                    <div class="times-list" data-movie-id="{{ m.id }}">
-                        {% for s in m.showtimes %}
-                            <button class="time-btn" data-time="{{ s }}" data-movie-id="{{ m.id }}">{{ s }}</button>
-                        {% endfor %}
-                    </div>
+        <meta charset="UTF-8">
+        <title>CinéMax - Accueil</title>
+        <link rel="preconnect" href="https://fonts.gstatic.com">
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+        <meta name="viewport" content="width=device-width,initial-scale=1">
+    </head>
+    <body>
+        <nav class="topbar">
+            <div class="container">
+                <div class="brand">CinéMax</div>
+                <div class="nav-actions">
+                    <input id="search" placeholder="Rechercher un film..." />
                 </div>
-            </article>
-            {% endfor %}
-        </div>
-    </section>
+            </div>
+        </nav>
 
-    <footer>
-        <p>&copy; {{ current_year }} CinéMax</p>
-    </footer>
-    <script src="{{ url_for('static', filename='app.js') }}"></script>
-</body>
-</html>
+        <header class="hero">
+            <div class="container">
+                <h1>Bienvenue à CinéMax</h1>
+                <p class="lead">Consultez les séances, découvrez les films et réservez vos places.</p>
+                <div class="hero-cta">
+                    <a href="#movies" class="btn primary">Voir les séances</a>
+                </div>
+            </div>
+        </header>
+
+        <main class="container">
+            <section class="prices card small">
+                <h2>Tarifs</h2>
+                <div class="prices-grid">
+                    <div class="price-item"><strong>Adulte</strong><span>{{ prices.adult }} €</span></div>
+                    <div class="price-item"><strong>Enfant</strong><span>{{ prices.child }} €</span></div>
+                    <div class="price-item"><strong>Senior</strong><span>{{ prices.senior }} €</span></div>
+                </div>
+            </section>
+
+            <section class="controls">
+                <label for="date-select">Choisir la date :</label>
+                <div id="date-select" class="date-buttons">
+                    {% for d in available_dates %}
+                        <button class="date-btn" data-iso="{{ d.iso }}">{{ d.label }}</button>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section id="movies" class="movies">
+                <h2>À l'affiche</h2>
+                <div class="grid">
+                    {% for m in movies %}
+                    <article class="card movie-card" data-title="{{ m.title }}">
+                        <div class="poster" aria-hidden="true">
+                            <img src="{{ m.poster }}" alt="Affiche {{ m.title }}">
+                        </div>
+                        <div class="movie-body">
+                            <h3 class="movie-title">{{ m.title }}</h3>
+                            <p class="meta">{{ m.duration }} min • {{ m.ratings }}</p>
+                            <p class="desc">{{ m.description }}</p>
+
+                            <div class="showtimes">
+                                <strong>Séances :</strong>
+                                <div class="times-list" data-movie-id="{{ m.id }}">
+                                    {% for s in m.showtimes %}
+                                        <button class="time-btn outline" data-time="{{ s }}" data-movie-id="{{ m.id }}" data-title="{{ m.title }}">{{ s }}</button>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                        </div>
+                    </article>
+                    {% endfor %}
+                </div>
+            </section>
+        </main>
+
+        <footer class="site-footer">
+            <div class="container">
+                <div>&copy; {{ current_year }} CinéMax</div>
+                <div class="small">Site démo — pas de paiement réel</div>
+            </div>
+        </footer>
+
+        <!-- Modal reservation -->
+        <div id="booking-modal" class="modal hidden" role="dialog" aria-hidden="true">
+            <div class="modal-backdrop"></div>
+            <div class="modal-panel">
+                <button class="modal-close" aria-label="Fermer">✕</button>
+                <h3 id="modal-title">Réserver</h3>
+                <form id="booking-form">
+                    <div class="form-row">
+                        <label>Film</label>
+                        <input type="text" id="bk-film" readonly />
+                    </div>
+                    <div class="form-row half">
+                        <label>Date</label>
+                        <input type="text" id="bk-date" readonly />
+                    </div>
+                    <div class="form-row half">
+                        <label>Séance</label>
+                        <input type="text" id="bk-time" readonly />
+                    </div>
+                    <div class="form-row">
+                        <label>Nom</label>
+                        <input type="text" id="bk-name" placeholder="Votre nom" required />
+                    </div>
+                    <div class="form-row">
+                        <label>Places</label>
+                        <select id="bk-count">
+                            <option>1</option>
+                            <option>2</option>
+                            <option>3</option>
+                            <option>4</option>
+                        </select>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn primary">Confirmer la réservation</button>
+                        <button type="button" class="btn" id="modal-cancel">Annuler</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <script src="{{ url_for('static', filename='app.js') }}"></script>
+    </body>
+    </html>
