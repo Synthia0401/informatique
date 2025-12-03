@@ -5,3 +5,89 @@ body {
 h1 {
     text-align: center;
 }
+
+header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+.tagline {
+    color: #666;
+    margin-top: 4px;
+}
+
+.prices {
+    background: #f7f7f7;
+    padding: 12px;
+    border-radius: 6px;
+    max-width: 420px;
+    margin: 0 auto 20px;
+}
+
+.movies .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 12px;
+}
+
+.controls {
+    max-width: 900px;
+    margin: 0 auto 16px;
+    text-align: center;
+}
+.date-buttons {
+    display: inline-flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+}
+.date-btn {
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    background: #fff;
+    cursor: pointer;
+}
+.date-btn.active {
+    background: #2b7bf6;
+    color: #fff;
+    border-color: #1b5de0;
+}
+.time-btn {
+    background: #eef;
+    border: 1px solid #cce;
+    padding: 6px 8px;
+    margin: 6px 6px 0 0;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.time-btn:hover { filter: brightness(.98); }
+
+.card {
+    border: 1px solid #e3e3e3;
+    padding: 12px;
+    border-radius: 6px;
+    background: #fff;
+}
+.card h3 {
+    margin: 0 0 6px 0;
+}
+.meta {
+    color: #888;
+    font-size: 0.9em;
+}
+.desc {
+    margin: 8px 0;
+}
+.showtimes .time {
+    display: inline-block;
+    background: #eef;
+    padding: 4px 8px;
+    margin: 4px 6px 0 0;
+    border-radius: 4px;
+}
+
+footer {
+    text-align: center;
+    margin-top: 28px;
+    color: #777;
+}

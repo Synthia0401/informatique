@@ -2,9 +2,59 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>CinéMax</title>
+    <title>CinéMax - Accueil</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
 </head>
 <body>
-    <h1>Bienvenue sur CinéMax</h1>
+    <header>
+        <h1>CinéMax</h1>
+        <p class="tagline">Films, séances et tarifs</p>
+    </header>
+
+    <section class="prices">
+        <h2>Tarifs</h2>
+        <ul>
+            <li>Adulte : {{ prices.adult }} €</li>
+            <li>Enfant : {{ prices.child }} €</li>
+            <li>Senior : {{ prices.senior }} €</li>
+        </ul>
+    </section>
+
+    <section class="controls">
+        <label for="date-select">Choisir la date :</label>
+        <div id="date-select" class="date-buttons">
+            {% for d in available_dates %}
+                <button class="date-btn" data-iso="{{ d.iso }}">{{ d.label }}</button>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="movies">
+        <h2>À l'affiche</h2>
+        <div class="grid">
+            {% for m in movies %}
+            <article class="card">
+                <h3>{{ m.title }}</h3>
+                <p class="meta">{{ m.duration }} min • {{ m.ratings }}</p>
+                <p class="desc">{{ m.description }}</p>
+
+                <div class="showtimes">
+                    <strong>Séances :</strong>
+                    <div class="times-list" data-movie-id="{{ m.id }}">
+                        {% for s in m.showtimes %}
+                            <button class="time-btn" data-time="{{ s }}" data-movie-id="{{ m.id }}">{{ s }}</button>
+                        {% endfor %}
+                    </div>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; {{ current_year }} CinéMax</p>
+    </footer>
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
 </body>
 </html>
