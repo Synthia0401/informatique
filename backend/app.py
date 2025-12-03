@@ -1,11 +1,56 @@
-from flask import Flask, render_template, url_for
+from flask import Flask, render_template, url_for, request, jsonify, session
 from datetime import datetime, timedelta
+from werkzeug.security import generate_password_hash, check_password_hash
+import sqlite3
+import os
+import json
 
 app = Flask(
     __name__,
     template_folder="../frontend/templates",
     static_folder="../frontend/static",
 )
+
+app.secret_key = "votre_clé_secrète_cinema_2024"  # À changer en production
+DB_PATH = os.path.join(os.path.dirname(__file__), "cinema.db")
+
+# Initialiser la base de données
+def init_db():
+    if not os.path.exists(DB_PATH):
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+
+        # Table utilisateurs
+        cursor.execute('''
+            CREATE TABLE users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                email TEXT UNIQUE NOT NULL,
+                password TEXT NOT NULL,
+                nom TEXT NOT NULL,
+                prenom TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+
+        # Table réservations
+        cursor.execute('''
+            CREATE TABLE reservations (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                film_title TEXT NOT NULL,
+                film_date TEXT NOT NULL,
+                film_time TEXT NOT NULL,
+                seats INTEGER NOT NULL,
+                total_price REAL NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY(user_id) REFERENCES users(id)
+            )
+        ''')
+
+        conn.commit()
+        conn.close()
+
+init_db()
 
 # Sample data for the cinema
 PRICES = {
@@ -140,6 +185,183 @@ def home():
         current_year=datetime.now().year,
         available_dates=get_available_dates(5),
     )
+
+
+# ========================================
+# ROUTES D'AUTHENTIFICATION
+# ========================================
+
+@app.route("/api/register", methods=["POST"])
+def register():
+    data = request.get_json()
+    email = data.get("email")
+    password = data.get("password")
+    nom = data.get("nom")
+    prenom = data.get("prenom")
+
+    if not all([email, password, nom, prenom]):
+        return jsonify({"success": False, "error": "Tous les champs sont requis"}), 400
+
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+
+        hashed_password = generate_password_hash(password)
+        cursor.execute(
+            "INSERT INTO users (email, password, nom, prenom) VALUES (?, ?, ?, ?)",
+            (email, hashed_password, nom, prenom)
+        )
+        conn.commit()
+        user_id = cursor.lastrowid
+        conn.close()
+
+        session["user_id"] = user_id
+        session["email"] = email
+        session["nom"] = nom
+        session["prenom"] = prenom
+
+        return jsonify({
+            "success": True,
+            "user": {"id": user_id, "email": email, "nom": nom, "prenom": prenom}
+        })
+
+    except sqlite3.IntegrityError:
+        return jsonify({"success": False, "error": "Cet email existe déjà"}), 400
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/login", methods=["POST"])
+def login():
+    data = request.get_json()
+    email = data.get("email")
+    password = data.get("password")
+
+    if not email or not password:
+        return jsonify({"success": False, "error": "Email et mot de passe requis"}), 400
+
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT id, password, nom, prenom FROM users WHERE email = ?", (email,))
+        user = cursor.fetchone()
+        conn.close()
+
+        if not user or not check_password_hash(user[1], password):
+            return jsonify({"success": False, "error": "Email ou mot de passe incorrect"}), 401
+
+        user_id, _, nom, prenom = user
+        session["user_id"] = user_id
+        session["email"] = email
+        session["nom"] = nom
+        session["prenom"] = prenom
+
+        return jsonify({
+            "success": True,
+            "user": {"id": user_id, "email": email, "nom": nom, "prenom": prenom}
+        })
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/logout", methods=["POST"])
+def logout():
+    session.clear()
+    return jsonify({"success": True})
+
+
+@app.route("/api/user", methods=["GET"])
+def get_user():
+    if "user_id" not in session:
+        return jsonify({"success": False, "user": None}), 401
+
+    return jsonify({
+        "success": True,
+        "user": {
+            "id": session.get("user_id"),
+            "email": session.get("email"),
+            "nom": session.get("nom"),
+            "prenom": session.get("prenom")
+        }
+    })
+
+
+@app.route("/api/booking", methods=["POST"])
+def create_booking():
+    if "user_id" not in session:
+        return jsonify({"success": False, "error": "Non authentifié"}), 401
+
+    data = request.get_json()
+    user_id = session["user_id"]
+    film_title = data.get("film_title")
+    film_date = data.get("film_date")
+    film_time = data.get("film_time")
+    seats = data.get("seats", 1)
+    total_price = float(PRICES["adult"]) * int(seats)
+
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "INSERT INTO reservations (user_id, film_title, film_date, film_time, seats, total_price) VALUES (?, ?, ?, ?, ?, ?)",
+            (user_id, film_title, film_date, film_time, seats, total_price)
+        )
+        conn.commit()
+        booking_id = cursor.lastrowid
+        conn.close()
+
+        return jsonify({
+            "success": True,
+            "booking": {
+                "id": booking_id,
+                "film_title": film_title,
+                "film_date": film_date,
+                "film_time": film_time,
+                "seats": seats,
+                "total_price": total_price
+            }
+        })
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/my-bookings", methods=["GET"])
+def my_bookings():
+    if "user_id" not in session:
+        return jsonify({"success": False, "bookings": []}), 401
+
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "SELECT id, film_title, film_date, film_time, seats, total_price, created_at FROM reservations WHERE user_id = ? ORDER BY created_at DESC",
+            (session["user_id"],)
+        )
+        bookings = cursor.fetchall()
+        conn.close()
+
+        booking_list = [
+            {
+                "id": b[0],
+                "film_title": b[1],
+                "film_date": b[2],
+                "film_time": b[3],
+                "seats": b[4],
+                "total_price": b[5],
+                "created_at": b[6]
+            }
+            for b in bookings
+        ]
+
+        return jsonify({"success": True, "bookings": booking_list})
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
 
 
 if __name__ == "__main__":

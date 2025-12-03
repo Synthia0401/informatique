@@ -21,6 +21,23 @@
                 <input type="text" id="search" placeholder="Rechercher un film..." class="search-input">
                 <span class="search-icon">🔍</span>
             </div>
+            <div class="nav-account">
+                <button id="account-btn" class="account-button" title="Mon compte">👤</button>
+                <div id="account-menu" class="account-menu hidden">
+                    <div id="account-logged-in" class="hidden">
+                        <div class="account-user-info">
+                            <p id="account-user-name"></p>
+                            <p id="account-user-email"></p>
+                        </div>
+                        <button id="my-bookings-btn" class="account-menu-item">Mes réservations</button>
+                        <button id="logout-btn" class="account-menu-item logout">Déconnexion</button>
+                    </div>
+                    <div id="account-logged-out">
+                        <button id="login-tab-btn" class="tab-btn active">Connexion</button>
+                        <button id="register-tab-btn" class="tab-btn">Créer un compte</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </nav>
 
@@ -136,10 +153,6 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="bk-name">Votre nom</label>
-                    <input type="text" id="bk-name" placeholder="Jean Dupont" required>
-                </div>
-                <div class="form-group">
                     <label for="bk-count">Nombre de places</label>
                     <select id="bk-count">
                         <option value="1">1 place</option>
@@ -155,6 +168,70 @@
                     <button type="button" class="btn btn-secondary" id="modal-cancel">Annuler</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Authentication Modal -->
+    <div id="auth-modal" class="modal hidden" role="dialog" aria-hidden="true">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content auth-modal">
+            <button class="modal-close" aria-label="Fermer la modale">✕</button>
+
+            <!-- Login Form -->
+            <div id="login-form-section" class="auth-section">
+                <h2 class="modal-title">Connexion</h2>
+                <form id="login-form" class="booking-form">
+                    <div class="form-group">
+                        <label for="login-email">Email</label>
+                        <input type="email" id="login-email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">Mot de passe</label>
+                        <input type="password" id="login-password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Se connecter</button>
+                    <div id="login-error" class="error-message hidden"></div>
+                </form>
+            </div>
+
+            <!-- Register Form -->
+            <div id="register-form-section" class="auth-section hidden">
+                <h2 class="modal-title">Créer un compte</h2>
+                <form id="register-form" class="booking-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="register-prenom">Prénom</label>
+                            <input type="text" id="register-prenom" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="register-nom">Nom</label>
+                            <input type="text" id="register-nom" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-email">Email</label>
+                        <input type="email" id="register-email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-password">Mot de passe</label>
+                        <input type="password" id="register-password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Créer mon compte</button>
+                    <div id="register-error" class="error-message hidden"></div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- My Bookings Modal -->
+    <div id="bookings-modal" class="modal hidden" role="dialog" aria-hidden="true">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <button class="modal-close" aria-label="Fermer la modale">✕</button>
+            <h2 class="modal-title">Mes réservations</h2>
+            <div id="bookings-list" class="bookings-list">
+                <p>Aucune réservation pour le moment.</p>
+            </div>
         </div>
     </div>
 

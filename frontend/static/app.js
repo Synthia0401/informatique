@@ -4,7 +4,7 @@
 
 document.addEventListener('DOMContentLoaded', function () {
     // ========================================
-    // DOM Elements
+    // DOM Elements - Booking
     // ========================================
     const dateButtons = Array.from(document.querySelectorAll('.date-btn'));
     const timeButtons = Array.from(document.querySelectorAll('.time-btn'));
@@ -18,6 +18,28 @@ document.addEventListener('DOMContentLoaded', function () {
     const bookingForm = document.getElementById('booking-form');
     const searchInput = document.getElementById('search');
     const movieCards = document.querySelectorAll('.movie-card');
+
+    // ========================================
+    // DOM Elements - Authentication
+    // ========================================
+    const accountBtn = document.getElementById('account-btn');
+    const accountMenu = document.getElementById('account-menu');
+    const accountLoggedIn = document.getElementById('account-logged-in');
+    const accountLoggedOut = document.getElementById('account-logged-out');
+    const authModal = document.getElementById('auth-modal');
+    const loginForm = document.getElementById('login-form');
+    const registerForm = document.getElementById('register-form');
+    const loginTabBtn = document.getElementById('login-tab-btn');
+    const registerTabBtn = document.getElementById('register-tab-btn');
+    const loginFormSection = document.getElementById('login-form-section');
+    const registerFormSection = document.getElementById('register-form-section');
+    const logoutBtn = document.getElementById('logout-btn');
+    const myBookingsBtn = document.getElementById('my-bookings-btn');
+    const bookingsModal = document.getElementById('bookings-modal');
+    const bookingsList = document.getElementById('bookings-list');
+
+    let currentUser = null;
+    let pendingBooking = null;
 
     // ========================================
     // STATE MANAGEMENT
@@ -37,6 +59,195 @@ document.addEventListener('DOMContentLoaded', function () {
     function saveReservations() {
         localStorage.setItem('cinemaReservations', JSON.stringify(reservations));
     }
+
+    // ========================================
+    // AUTHENTICATION MANAGEMENT
+    // ========================================
+
+    async function checkUserStatus() {
+        try {
+            const response = await fetch('/api/user');
+            const data = await response.json();
+
+            if (data.success && data.user) {
+                currentUser = data.user;
+                updateUIForLoggedIn();
+            } else {
+                currentUser = null;
+                updateUIForLoggedOut();
+            }
+        } catch (error) {
+            console.error('Error checking user status:', error);
+        }
+    }
+
+    function updateUIForLoggedIn() {
+        accountLoggedOut.classList.add('hidden');
+        accountLoggedIn.classList.remove('hidden');
+        document.getElementById('account-user-name').textContent = `${currentUser.prenom} ${currentUser.nom}`;
+        document.getElementById('account-user-email').textContent = currentUser.email;
+    }
+
+    function updateUIForLoggedOut() {
+        accountLoggedIn.classList.add('hidden');
+        accountLoggedOut.classList.remove('hidden');
+    }
+
+    function openAuthModal() {
+        authModal.classList.remove('hidden');
+        authModal.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeAuthModal() {
+        authModal.classList.add('hidden');
+        authModal.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = 'auto';
+        loginForm.reset();
+        registerForm.reset();
+    }
+
+    function showLoginForm() {
+        loginFormSection.classList.remove('hidden');
+        registerFormSection.classList.add('hidden');
+        loginTabBtn.classList.add('active');
+        registerTabBtn.classList.remove('active');
+    }
+
+    function showRegisterForm() {
+        loginFormSection.classList.add('hidden');
+        registerFormSection.classList.remove('hidden');
+        loginTabBtn.classList.remove('active');
+        registerTabBtn.classList.add('active');
+    }
+
+    // Account button toggle
+    accountBtn.addEventListener('click', () => {
+        accountMenu.classList.toggle('hidden');
+    });
+
+    // Close account menu when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!accountBtn.contains(e.target) && !accountMenu.contains(e.target)) {
+            accountMenu.classList.add('hidden');
+        }
+    });
+
+    // Login form submission
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
+        const errorEl = document.getElementById('login-error');
+
+        try {
+            const response = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                currentUser = data.user;
+                updateUIForLoggedIn();
+                closeAuthModal();
+                accountMenu.classList.add('hidden');
+                showSuccessNotification(`Bienvenue ${currentUser.prenom}!`);
+            } else {
+                errorEl.textContent = data.error;
+                errorEl.classList.remove('hidden');
+            }
+        } catch (error) {
+            errorEl.textContent = 'Erreur de connexion';
+            errorEl.classList.remove('hidden');
+        }
+    });
+
+    // Register form submission
+    registerForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('register-email').value;
+        const password = document.getElementById('register-password').value;
+        const nom = document.getElementById('register-nom').value;
+        const prenom = document.getElementById('register-prenom').value;
+        const errorEl = document.getElementById('register-error');
+
+        try {
+            const response = await fetch('/api/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password, nom, prenom })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                currentUser = data.user;
+                updateUIForLoggedIn();
+                closeAuthModal();
+                accountMenu.classList.add('hidden');
+                showSuccessNotification(`Compte créé! Bienvenue ${currentUser.prenom}!`);
+            } else {
+                errorEl.textContent = data.error;
+                errorEl.classList.remove('hidden');
+            }
+        } catch (error) {
+            errorEl.textContent = 'Erreur lors de la création du compte';
+            errorEl.classList.remove('hidden');
+        }
+    });
+
+    // Tab switching
+    loginTabBtn.addEventListener('click', showLoginForm);
+    registerTabBtn.addEventListener('click', showRegisterForm);
+
+    // Logout
+    logoutBtn.addEventListener('click', async () => {
+        try {
+            await fetch('/api/logout', { method: 'POST' });
+            currentUser = null;
+            updateUIForLoggedOut();
+            accountMenu.classList.add('hidden');
+            showSuccessNotification('Déconnecté');
+        } catch (error) {
+            console.error('Error logging out:', error);
+        }
+    });
+
+    // My Bookings
+    myBookingsBtn.addEventListener('click', async () => {
+        try {
+            const response = await fetch('/api/my-bookings');
+            const data = await response.json();
+
+            bookingsList.innerHTML = '';
+
+            if (data.bookings && data.bookings.length > 0) {
+                data.bookings.forEach((booking) => {
+                    const bookingEl = document.createElement('div');
+                    bookingEl.className = 'booking-item';
+                    bookingEl.innerHTML = `
+                        <h4>${booking.film_title}</h4>
+                        <p><strong>Date:</strong> ${booking.film_date}</p>
+                        <p><strong>Heure:</strong> ${booking.film_time}</p>
+                        <p><strong>Places:</strong> ${booking.seats}</p>
+                        <p class="booking-price">Total: ${booking.total_price}€</p>
+                    `;
+                    bookingsList.appendChild(bookingEl);
+                });
+            } else {
+                bookingsList.innerHTML = '<p>Aucune réservation pour le moment.</p>';
+            }
+
+            bookingsModal.classList.remove('hidden');
+            bookingsModal.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+        } catch (error) {
+            console.error('Error loading bookings:', error);
+        }
+    });
 
     // ========================================
     // DATE SELECTION
@@ -85,6 +296,10 @@ document.addEventListener('DOMContentLoaded', function () {
     // ========================================
     timeButtons.forEach((t) => {
         t.addEventListener('click', (event) => {
+            if (!currentUser) {
+                openAuthModal();
+                return;
+            }
             const title = t.dataset.title || '';
             const time = t.dataset.time || '';
             const date = document.body.dataset.selectedDate || '';
@@ -100,45 +315,82 @@ document.addEventListener('DOMContentLoaded', function () {
     modalCancel.addEventListener('click', closeModal);
     modalBackdrop.addEventListener('click', closeModal);
 
+    // Close auth modal
+    const authModalClose = authModal.querySelector('.modal-close');
+    authModalClose.addEventListener('click', closeAuthModal);
+    authModal.querySelector('.modal-backdrop').addEventListener('click', closeAuthModal);
+
+    // Close bookings modal
+    const bookingsModalClose = bookingsModal.querySelector('.modal-close');
+    bookingsModalClose.addEventListener('click', () => {
+        bookingsModal.classList.add('hidden');
+        bookingsModal.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = 'auto';
+    });
+    bookingsModal.querySelector('.modal-backdrop').addEventListener('click', () => {
+        bookingsModal.classList.add('hidden');
+        bookingsModal.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = 'auto';
+    });
+
     // Close modal with Escape key
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
-            closeModal();
+        if (e.key === 'Escape') {
+            if (!modal.classList.contains('hidden')) {
+                closeModal();
+            }
+            if (!authModal.classList.contains('hidden')) {
+                closeAuthModal();
+            }
+            if (!bookingsModal.classList.contains('hidden')) {
+                bookingsModal.classList.add('hidden');
+                bookingsModal.setAttribute('aria-hidden', 'true');
+                document.body.style.overflow = 'auto';
+            }
         }
     });
 
     // ========================================
     // BOOKING FORM SUBMISSION
     // ========================================
-    bookingForm.addEventListener('submit', function (ev) {
+    bookingForm.addEventListener('submit', async function (ev) {
         ev.preventDefault();
 
-        const name = document.getElementById('bk-name').value || 'Anonyme';
+        if (!currentUser) {
+            openAuthModal();
+            closeModal();
+            return;
+        }
+
         const count = document.getElementById('bk-count').value || '1';
         const film = bkFilm.value;
         const date = bkDate.value;
         const time = bkTime.value;
 
-        // Create reservation object
-        const reservation = {
-            id: Date.now(),
-            film: film,
-            date: date,
-            time: time,
-            name: name,
-            seats: count,
-            totalPrice: calculatePrice(count),
-            bookingDate: new Date().toLocaleString('fr-FR')
-        };
+        try {
+            const response = await fetch('/api/booking', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    film_title: film,
+                    film_date: date,
+                    film_time: time,
+                    seats: count
+                })
+            });
 
-        // Save reservation
-        reservations.push(reservation);
-        saveReservations();
+            const data = await response.json();
 
-        // Show success message
-        showSuccessNotification(name, film, date, time, count);
-
-        closeModal();
+            if (data.success) {
+                showSuccessNotification(`${currentUser.prenom}`, film, date, time, count);
+                closeModal();
+            } else {
+                alert('Erreur: ' + data.error);
+            }
+        } catch (error) {
+            console.error('Booking error:', error);
+            alert('Erreur lors de la réservation');
+        }
     });
 
     // ========================================
@@ -382,6 +634,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Load reservations on page load
     loadReservations();
+
+    // Check user authentication status on page load
+    checkUserStatus();
 
     // ========================================
     // APPLY GRADIENT BACKGROUNDS TO POSTERS
