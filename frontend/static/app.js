@@ -515,6 +515,40 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // ========================================
+    // RESERVE BUTTON HANDLING
+    // ========================================
+    const reserveButtons = document.querySelectorAll('.reserve-btn');
+
+    reserveButtons.forEach((btn) => {
+        btn.addEventListener('click', (event) => {
+            // If not logged in, open auth modal
+            if (!currentUser) {
+                openAuthModal();
+
+                // After user logs in, show the showtimes
+                // We'll use a MutationObserver to detect when user logs in
+                const observer = new MutationObserver(() => {
+                    if (currentUser) {
+                        const showtimesDetails = btn.nextElementSibling;
+                        if (showtimesDetails && showtimesDetails.classList.contains('hidden')) {
+                            showtimesDetails.classList.remove('hidden');
+                        }
+                        observer.disconnect();
+                    }
+                });
+                observer.observe(document.body, { attributes: true, subtree: true });
+                return;
+            }
+
+            // If logged in, toggle showtimes display
+            const showtimesDetails = btn.nextElementSibling;
+            if (showtimesDetails && showtimesDetails.classList.contains('showtimes-details')) {
+                showtimesDetails.classList.toggle('hidden');
+            }
+        });
+    });
+
+    // ========================================
     // MODAL CONTROLS
     // ========================================
     modalClose.addEventListener('click', closeModal);

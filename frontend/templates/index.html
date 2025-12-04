@@ -133,11 +133,14 @@
                                 {% endif %}
                             </div>
                             <div class="showtimes">
-                                <p class="showtimes-label">Séances disponibles :</p>
-                                <div class="times-grid">
-                                    {% for s in m.showtimes %}
-                                        <button class="time-btn" data-time="{{ s }}" data-movie-id="{{ m.id }}" data-title="{{ m.title }}">{{ s }}</button>
-                                    {% endfor %}
+                                <button class="reserve-btn" data-movie-id="{{ m.id }}" data-title="{{ m.title }}" data-showtimes="{{ m.showtimes|join(',') }}">📅 Réserver</button>
+                                <div class="showtimes-details hidden">
+                                    <p class="showtimes-label">Séances disponibles :</p>
+                                    <div class="times-grid">
+                                        {% for s in m.showtimes %}
+                                            <button class="time-btn" data-time="{{ s }}" data-movie-id="{{ m.id }}" data-title="{{ m.title }}">{{ s }}</button>
+                                        {% endfor %}
+                                    </div>
                                 </div>
                             </div>
                         </div>
