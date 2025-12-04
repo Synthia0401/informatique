@@ -169,6 +169,7 @@
                 <div class="form-group">
                     <label for="bk-count">Nombre de places</label>
                     <select id="bk-count">
+                        <option value="">Sélectionnez un nombre</option>
                         <option value="1">1 place</option>
                         <option value="2">2 places</option>
                         <option value="3">3 places</option>
@@ -177,11 +178,44 @@
                         <option value="6">6 places</option>
                     </select>
                 </div>
+                <!-- Hidden fields for showtime and theatre -->
+                <input type="hidden" id="bk-showtime-id">
+                <input type="hidden" id="bk-theatre-id">
+                <input type="hidden" id="bk-selected-seats" value="[]">
+                <!-- Button to select seats -->
+                <div id="seat-selection-button" class="seat-selection-button hidden">
+                    <button type="button" class="btn btn-accent" id="choose-seats-btn">Choisir mes places</button>
+                </div>
+                <!-- Seat categories section -->
+                <div id="seat-categories" class="seat-categories hidden">
+                    <h3>Catégories tarifaires</h3>
+                    <div id="seat-category-list"></div>
+                    <div class="price-summary">
+                        <p>Prix total: <span id="total-price">0.00</span> €</p>
+                    </div>
+                </div>
                 <div class="form-actions">
                     <button type="submit" class="btn btn-primary">Confirmer la réservation</button>
                     <button type="button" class="btn btn-secondary" id="modal-cancel">Annuler</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Seat Selection Modal -->
+    <div id="seat-selection-modal" class="modal hidden" role="dialog" aria-hidden="true">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content seat-selection-modal-content">
+            <button class="modal-close" aria-label="Fermer la modale">✕</button>
+            <h2 class="modal-title">Sélectionnez vos places</h2>
+            <div id="seat-layout" class="seat-layout"></div>
+            <div class="seat-selection-info">
+                <p>Places sélectionnées: <span id="selected-count">0</span>/<span id="required-count">0</span></p>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-primary" id="confirm-seats-btn">Confirmer les places</button>
+                <button type="button" class="btn btn-secondary" id="cancel-seats-btn">Annuler</button>
+            </div>
         </div>
     </div>
 

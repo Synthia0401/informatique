@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
 import os
+import json
 
 app = Flask(
     __name__,
@@ -34,6 +35,32 @@ def init_db():
             )
         ''')
 
+        # Table salles de cinéma
+        cursor.execute('''
+            CREATE TABLE theatres (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                capacity INTEGER NOT NULL,
+                rows INTEGER NOT NULL,
+                seats_per_row INTEGER NOT NULL
+            )
+        ''')
+
+        # Table séances (showtimes)
+        cursor.execute('''
+            CREATE TABLE showtimes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                film_title TEXT NOT NULL,
+                film_date TEXT NOT NULL,
+                film_time TEXT NOT NULL,
+                theatre_id INTEGER NOT NULL,
+                available_seats INTEGER NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY(theatre_id) REFERENCES theatres(id),
+                UNIQUE(film_date, film_time, theatre_id)
+            )
+        ''')
+
         # Table réservations
         cursor.execute('''
             CREATE TABLE reservations (
@@ -44,8 +71,29 @@ def init_db():
                 film_time TEXT NOT NULL,
                 seats INTEGER NOT NULL,
                 total_price REAL NOT NULL,
+                theatre_id INTEGER,
+                showtime_id INTEGER,
+                seat_categories TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY(user_id) REFERENCES users(id)
+                FOREIGN KEY(user_id) REFERENCES users(id),
+                FOREIGN KEY(theatre_id) REFERENCES theatres(id),
+                FOREIGN KEY(showtime_id) REFERENCES showtimes(id)
+            )
+        ''')
+
+        # Table des sièges réservés
+        cursor.execute('''
+            CREATE TABLE seat_bookings (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                reservation_id INTEGER NOT NULL,
+                theatre_id INTEGER NOT NULL,
+                showtime_id INTEGER NOT NULL,
+                row_letter TEXT NOT NULL,
+                seat_number INTEGER NOT NULL,
+                category TEXT,
+                FOREIGN KEY(reservation_id) REFERENCES reservations(id),
+                FOREIGN KEY(theatre_id) REFERENCES theatres(id),
+                FOREIGN KEY(showtime_id) REFERENCES showtimes(id)
             )
         ''')
 
@@ -75,6 +123,80 @@ def create_test_user():
         pass
 
 create_test_user()
+
+# Create test theatres and showtimes
+def create_test_data():
+    """Create 10 theatres and populate with showtimes"""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+
+        # Check if theatres already exist
+        cursor.execute("SELECT COUNT(*) FROM theatres")
+        if cursor.fetchone()[0] == 0:
+            # Create 10 theatres
+            for i in range(1, 11):
+                cursor.execute(
+                    "INSERT INTO theatres (name, capacity, rows, seats_per_row) VALUES (?, ?, ?, ?)",
+                    (f"Salle {i}", 96, 8, 12)
+                )
+            conn.commit()
+
+            # Get theatre IDs
+            cursor.execute("SELECT id FROM theatres ORDER BY id")
+            theatre_ids = [row[0] for row in cursor.fetchall()]
+
+            # Create showtimes for different movies in different theatres
+            from datetime import datetime, timedelta
+            today = datetime.now().date()
+
+            movies = [
+                "Inside Out 2",
+                "Moana 2",
+                "Despicable Me 4",
+                "Deadpool & Wolverine",
+                "Dune: Part Two",
+                "Wicked",
+                "Twisters",
+                "Furiosa: A Mad Max Saga",
+                "Godzilla x Kong: The New Empire",
+                "Kung Fu Panda 4"
+            ]
+
+            showtimes_list = [
+                ["14:00", "17:30", "20:45"],
+                ["13:15", "16:00", "19:00"],
+                ["15:00", "18:30", "22:00"],
+                ["12:45", "15:30", "20:15"],
+                ["16:00", "19:45", "23:00"],
+                ["11:30", "14:30", "18:00"],
+                ["13:00", "17:00", "21:00"],
+                ["12:00", "15:00", "18:30"],
+                ["17:15", "20:30"],
+                ["10:45", "14:15", "19:30"]
+            ]
+
+            # Assign one movie to each theatre for the next 3 days
+            for day_offset in range(3):
+                current_date = (today + timedelta(days=day_offset)).isoformat()
+
+                for theatre_idx, movie in enumerate(movies):
+                    theatre_id = theatre_ids[theatre_idx]
+                    showtimes = showtimes_list[theatre_idx]
+
+                    for showtime in showtimes:
+                        # Ensure no duplicate (film_date, film_time, theatre_id)
+                        cursor.execute(
+                            "INSERT OR IGNORE INTO showtimes (film_title, film_date, film_time, theatre_id, available_seats) VALUES (?, ?, ?, ?, ?)",
+                            (movie, current_date, showtime, theatre_id, 96)
+                        )
+
+            conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"Error creating test data: {e}")
+
+create_test_data()
 
 # Sample data for the cinema
 PRICES = {
@@ -477,6 +599,9 @@ def create_booking():
     film_time = data.get("film_time")
     seats = data.get("seats", 1)
     seat_categories = data.get("seat_categories", [])
+    selected_seats = data.get("selected_seats", [])  # Format: [{"row": "A", "seat": 1, "category": "adult"}, ...]
+    showtime_id = data.get("showtime_id")
+    theatre_id = data.get("theatre_id")
 
     # Calculate total price based on seat categories
     total_price = 0
@@ -491,12 +616,31 @@ def create_booking():
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
 
+        # Store seat_categories as JSON string
+        seat_categories_json = json.dumps(seat_categories) if seat_categories else json.dumps([])
+
         cursor.execute(
-            "INSERT INTO reservations (user_id, film_title, film_date, film_time, seats, total_price) VALUES (?, ?, ?, ?, ?, ?)",
-            (user_id, film_title, film_date, film_time, seats, total_price)
+            "INSERT INTO reservations (user_id, film_title, film_date, film_time, seats, total_price, theatre_id, showtime_id, seat_categories) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (user_id, film_title, film_date, film_time, seats, total_price, theatre_id, showtime_id, seat_categories_json)
         )
         conn.commit()
         booking_id = cursor.lastrowid
+
+        # Insert individual seat bookings
+        if selected_seats and theatre_id and showtime_id:
+            for seat_info in selected_seats:
+                cursor.execute(
+                    "INSERT INTO seat_bookings (reservation_id, theatre_id, showtime_id, row_letter, seat_number, category) VALUES (?, ?, ?, ?, ?, ?)",
+                    (booking_id, theatre_id, showtime_id, seat_info.get("row"), seat_info.get("seat"), seat_info.get("category", "adult"))
+                )
+
+            # Update available_seats count
+            cursor.execute(
+                "UPDATE showtimes SET available_seats = available_seats - ? WHERE id = ?",
+                (len(selected_seats), showtime_id)
+            )
+
+        conn.commit()
         conn.close()
 
         return jsonify({
@@ -508,7 +652,8 @@ def create_booking():
                 "film_time": film_time,
                 "seats": seats,
                 "total_price": total_price,
-                "seat_categories": seat_categories
+                "seat_categories": seat_categories,
+                "selected_seats": selected_seats
             }
         })
 
@@ -628,6 +773,97 @@ def delete_booking(booking_id):
         conn.close()
 
         return jsonify({"success": True, "message": "Réservation supprimée"})
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/showtimes/<film_date>", methods=["GET"])
+def get_showtimes_by_date(film_date):
+    """Get all available showtimes for a specific date"""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT id, film_title, film_time, theatre_id, available_seats
+            FROM showtimes
+            WHERE film_date = ?
+            ORDER BY film_time
+        """, (film_date,))
+
+        showtimes = []
+        for row in cursor.fetchall():
+            showtimes.append({
+                "id": row[0],
+                "film_title": row[1],
+                "film_time": row[2],
+                "theatre_id": row[3],
+                "available_seats": row[4]
+            })
+
+        conn.close()
+        return jsonify({"success": True, "showtimes": showtimes})
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/seats/<int:showtime_id>", methods=["GET"])
+def get_seats(showtime_id):
+    """Get seat layout for a specific showtime"""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+
+        # Get theatre info
+        cursor.execute("""
+            SELECT t.id, t.rows, t.seats_per_row, s.film_title
+            FROM showtimes s
+            JOIN theatres t ON s.theatre_id = t.id
+            WHERE s.id = ?
+        """, (showtime_id,))
+
+        theatre_info = cursor.fetchone()
+        if not theatre_info:
+            return jsonify({"success": False, "error": "Showtime not found"}), 404
+
+        theatre_id, num_rows, seats_per_row, film_title = theatre_info
+
+        # Get booked seats for this showtime
+        cursor.execute("""
+            SELECT row_letter, seat_number FROM seat_bookings WHERE showtime_id = ?
+        """, (showtime_id,))
+
+        booked_seats = set()
+        for row in cursor.fetchall():
+            booked_seats.add((row[0], row[1]))
+
+        conn.close()
+
+        # Build seat layout
+        rows = []
+        for i in range(num_rows):
+            row_letter = chr(65 + i)  # A, B, C, ...
+            seats = []
+            for seat_num in range(1, seats_per_row + 1):
+                is_booked = (row_letter, seat_num) in booked_seats
+                seats.append({
+                    "number": seat_num,
+                    "booked": is_booked
+                })
+            rows.append({
+                "row": row_letter,
+                "seats": seats
+            })
+
+        return jsonify({
+            "success": True,
+            "showtime_id": showtime_id,
+            "film_title": film_title,
+            "theatre_id": theatre_id,
+            "rows": rows
+        })
 
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500

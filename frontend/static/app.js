@@ -1138,14 +1138,182 @@ document.addEventListener('DOMContentLoaded', function () {
     // ACCESSIBILITY IMPROVEMENTS
     // ========================================
 
-    // Add keyboard navigation for time buttons
-    timeButtons.forEach((btn) => {
-        btn.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                btn.click();
+    // ========================================
+    // SEAT SELECTION LOGIC
+    // ========================================
+    const seatSelectionModal = document.getElementById('seat-selection-modal');
+    const chooseSeatsBtn = document.getElementById('choose-seats-btn');
+    const confirmSeatsBtn = document.getElementById('confirm-seats-btn');
+    const cancelSeatsBtn = document.getElementById('cancel-seats-btn');
+    const seatLayout = document.getElementById('seat-layout');
+
+    let currentShowtimeId = null;
+    let currentTheatreId = null;
+    let selectedSeatsData = [];
+
+    // Function to load and display seats for a showtime
+    async function loadSeatLayout(showtimeId) {
+        try {
+            const response = await fetch(`/api/seats/${showtimeId}`);
+            const data = await response.json();
+
+            if (!data.success) {
+                alert('Erreur: ' + data.error);
+                return;
             }
-        });
+
+            currentShowtimeId = showtimeId;
+            currentTheatreId = data.theatre_id;
+            selectedSeatsData = [];
+
+            // Clear previous layout
+            seatLayout.innerHTML = '';
+
+            // Build seat layout
+            data.rows.forEach((row) => {
+                const rowDiv = document.createElement('div');
+                rowDiv.className = 'seat-row-display';
+
+                const labelSpan = document.createElement('span');
+                labelSpan.className = 'seat-row-label';
+                labelSpan.textContent = row.row;
+                rowDiv.appendChild(labelSpan);
+
+                row.seats.forEach((seat) => {
+                    const seatBtn = document.createElement('button');
+                    seatBtn.type = 'button';
+                    seatBtn.className = 'seat-btn';
+                    seatBtn.textContent = seat.number;
+                    seatBtn.dataset.row = row.row;
+                    seatBtn.dataset.seat = seat.number;
+
+                    if (seat.booked) {
+                        seatBtn.classList.add('booked');
+                        seatBtn.disabled = true;
+                    } else {
+                        seatBtn.addEventListener('click', toggleSeatSelection);
+                    }
+
+                    rowDiv.appendChild(seatBtn);
+                });
+
+                seatLayout.appendChild(rowDiv);
+            });
+
+            // Add legend
+            const legend = document.createElement('div');
+            legend.className = 'seat-legend';
+            legend.innerHTML = `
+                <div class="legend-item">
+                    <div class="legend-box available"></div>
+                    <span>Disponible</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-box booked"></div>
+                    <span>Occupé</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-box selected"></div>
+                    <span>Sélectionné</span>
+                </div>
+            `;
+            seatLayout.appendChild(legend);
+
+            // Show modal
+            seatSelectionModal.classList.remove('hidden');
+            seatSelectionModal.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+            updateSeatCount();
+
+        } catch (error) {
+            console.error('Error loading seats:', error);
+            alert('Erreur lors du chargement des places');
+        }
+    }
+
+    function toggleSeatSelection(e) {
+        const btn = e.target;
+        const row = btn.dataset.row;
+        const seat = parseInt(btn.dataset.seat);
+
+        const seatId = `${row}-${seat}`;
+
+        if (btn.classList.contains('selected')) {
+            btn.classList.remove('selected');
+            selectedSeatsData = selectedSeatsData.filter(s => s.seatId !== seatId);
+        } else {
+            const requiredCount = parseInt(document.getElementById('bk-count').value);
+            if (selectedSeatsData.length >= requiredCount) {
+                alert(`Vous ne pouvez sélectionner que ${requiredCount} place(s)`);
+                return;
+            }
+            btn.classList.add('selected');
+            selectedSeatsData.push({ row, seat, seatId });
+        }
+
+        updateSeatCount();
+    }
+
+    function updateSeatCount() {
+        const selectedCount = document.getElementById('selected-count');
+        const requiredCount = document.getElementById('required-count');
+        const totalCount = parseInt(document.getElementById('bk-count').value) || 0;
+
+        selectedCount.textContent = selectedSeatsData.length;
+        requiredCount.textContent = totalCount;
+    }
+
+    // Event listeners for seat selection modal
+    chooseSeatsBtn.addEventListener('click', async function() {
+        const showtimeId = document.getElementById('bk-showtime-id').value;
+        if (!showtimeId) {
+            alert('Veuillez d\'abord sélectionner une séance');
+            return;
+        }
+        await loadSeatLayout(showtimeId);
+    });
+
+    confirmSeatsBtn.addEventListener('click', function() {
+        const requiredCount = parseInt(document.getElementById('bk-count').value);
+        if (selectedSeatsData.length !== requiredCount) {
+            alert(`Vous devez sélectionner exactement ${requiredCount} place(s)`);
+            return;
+        }
+
+        // Store selected seats
+        document.getElementById('bk-selected-seats').value = JSON.stringify(selectedSeatsData);
+
+        // Close modal
+        seatSelectionModal.classList.add('hidden');
+        seatSelectionModal.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = 'auto';
+
+        // Show seat categories
+        generateSeatCategories(requiredCount);
+    });
+
+    cancelSeatsBtn.addEventListener('click', function() {
+        seatSelectionModal.classList.add('hidden');
+        seatSelectionModal.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = 'auto';
+    });
+
+    // Close seat selection modal with X button
+    const seatModalClose = seatSelectionModal.querySelector('.modal-close');
+    seatModalClose.addEventListener('click', function() {
+        seatSelectionModal.classList.add('hidden');
+        seatSelectionModal.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = 'auto';
+    });
+
+    // Update show/hide of "Choisir mes places" button when showtime is selected
+    bkTime.addEventListener('change', function() {
+        if (this.value) {
+            document.getElementById('bk-showtime-id').value = this.dataset.showtimeId || '';
+            document.getElementById('seat-selection-button').classList.remove('hidden');
+        } else {
+            document.getElementById('seat-selection-button').classList.add('hidden');
+        }
     });
 
     // Load reservations on page load
