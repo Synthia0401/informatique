@@ -31,7 +31,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const loginFormSection = document.getElementById('login-form-section');
     const registerFormSection = document.getElementById('register-form-section');
     const logoutBtn = document.getElementById('logout-btn');
-    const myBookingsBtn = document.getElementById('my-bookings-btn');
     const myBookingsBtnSection = document.getElementById('my-bookings-btn-hero');
     const bookingsModal = document.getElementById('bookings-modal');
     const bookingsList = document.getElementById('bookings-list');
@@ -431,8 +430,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Add click listeners to both bookings buttons
-    myBookingsBtn.addEventListener('click', showMyBookings);
+    // Add click listener to bookings button
     myBookingsBtnSection.addEventListener('click', showMyBookings);
 
     // ========================================
