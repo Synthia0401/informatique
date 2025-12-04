@@ -6,7 +6,6 @@ document.addEventListener('DOMContentLoaded', function () {
     // ========================================
     // DOM Elements - Booking
     // ========================================
-    const timeButtons = Array.from(document.querySelectorAll('.time-btn'));
 
     // Calendar elements
     const quickBtns = document.querySelectorAll('.quick-btn');
@@ -827,30 +826,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
     reserveButtons.forEach((btn) => {
         btn.addEventListener('click', (event) => {
-            // If not logged in, open auth modal
+            // Get the movie data from button attributes
+            const movieTitle = btn.getAttribute('data-title');
+
+            // If not logged in, open auth modal first
             if (!currentUser) {
                 openAuthModal();
-
-                // After user logs in, show the showtimes
-                // We'll use a MutationObserver to detect when user logs in
-                const observer = new MutationObserver(() => {
-                    if (currentUser) {
-                        const showtimesDetails = btn.nextElementSibling;
-                        if (showtimesDetails && showtimesDetails.classList.contains('hidden')) {
-                            showtimesDetails.classList.remove('hidden');
-                        }
-                        observer.disconnect();
-                    }
-                });
-                observer.observe(document.body, { attributes: true, subtree: true });
                 return;
             }
 
-            // If logged in, toggle showtimes display
-            const showtimesDetails = btn.nextElementSibling;
-            if (showtimesDetails && showtimesDetails.classList.contains('showtimes-details')) {
-                showtimesDetails.classList.toggle('hidden');
-            }
+            // If logged in, open the booking modal directly
+            openModal(movieTitle);
         });
     });
 

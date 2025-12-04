@@ -970,52 +970,6 @@ main {
     transform: translateY(0);
 }
 
-.showtimes-details {
-    transition: all 0.3s ease;
-    max-height: 500px;
-    overflow: hidden;
-}
-
-.showtimes-details.hidden {
-    max-height: 0;
-    overflow: hidden;
-    opacity: 0;
-}
-
-.showtimes-label {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--accent-color);
-    margin-bottom: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.times-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-}
-
-.time-btn {
-    padding: 8px 12px;
-    background: rgba(78, 205, 196, 0.1);
-    border: 1px solid var(--secondary-color);
-    color: var(--secondary-color);
-    border-radius: 6px;
-    cursor: pointer;
-    font-family: 'Poppins', sans-serif;
-    font-weight: 600;
-    font-size: 12px;
-    transition: all 0.3s ease;
-}
-
-.time-btn:hover {
-    background: var(--secondary-color);
-    color: var(--dark-bg);
-    transform: scale(1.05);
-}
-
 /* ========================================
    MODAL
    ======================================== */
