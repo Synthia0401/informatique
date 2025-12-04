@@ -832,13 +832,19 @@ document.addEventListener('DOMContentLoaded', function () {
         const [year, month, day] = iso.split('-');
         bkDate.value = iso;
         const dateObj = new Date(year, month - 1, day);
-        const displayText = dateObj.toLocaleDateString('fr-FR', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
+
+        // Format court: "jeu. 4 déc."
+        const shortText = dateObj.toLocaleDateString('fr-FR', {
+            weekday: 'short',
+            day: 'numeric',
+            month: 'short'
         });
-        bkDateDisplay.textContent = displayText.charAt(0).toUpperCase() + displayText.slice(1);
+        bkDateDisplay.textContent = shortText.charAt(0).toUpperCase() + shortText.slice(1);
+
+        // Mettre à jour les séances quand la date change
+        // Pour l'instant, on affiche les mêmes séances pour toutes les dates
+        // (car les séances ne varient pas par date dans notre app)
+        populateShowtimes(bkFilm.value);
     }
 
     function openBkCalendarModal() {
