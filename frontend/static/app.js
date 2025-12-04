@@ -7,17 +7,6 @@ document.addEventListener('DOMContentLoaded', function () {
     // DOM Elements - Booking
     // ========================================
 
-    // Calendar elements
-    const quickBtns = document.querySelectorAll('.quick-btn');
-    const calendarTriggerBtn = document.getElementById('calendar-trigger-btn');
-    const selectedDateDisplay = document.getElementById('selected-date-display');
-    const calendarModal = document.getElementById('calendar-modal');
-    const calendarModalBackdrop = document.querySelector('.calendar-modal-backdrop');
-    const calendarMonthSelect = document.getElementById('calendar-month');
-    const calendarYearSelect = document.getElementById('calendar-year');
-    const calendarPrevBtn = document.getElementById('calendar-prev-month');
-    const calendarNextBtn = document.getElementById('calendar-next-month');
-    const calendarDaysContainer = document.getElementById('calendar-days-container');
     const modal = document.getElementById('booking-modal');
     const modalBackdrop = document.querySelector('#booking-modal .modal-backdrop');
     const modalClose = modal.querySelector('.modal-close');
@@ -52,7 +41,6 @@ document.addEventListener('DOMContentLoaded', function () {
     // ========================================
     // STATE MANAGEMENT
     // ========================================
-    let selectedDate = null;
     let reservations = [];
 
     // Movie showtimes data - Extracted from backend
@@ -536,233 +524,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // ========================================
-    // DATE SELECTION - CALENDAR MODAL
-    // ========================================
-
-    function openCalendarModal() {
-        calendarModal.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
-    }
-
-    function closeCalendarModal() {
-        calendarModal.classList.add('hidden');
-        document.body.style.overflow = 'auto';
-    }
-
-    function updateSelectedDateDisplay() {
-        if (selectedDate) {
-            const [year, month, day] = selectedDate.split('-');
-            const dateObj = new Date(year, month - 1, day);
-            const options = { weekday: 'short', month: 'short', day: 'numeric' };
-            selectedDateDisplay.textContent = dateObj.toLocaleDateString('fr-FR', options);
-        }
-    }
-
-    // Calendar trigger button
-    calendarTriggerBtn.addEventListener('click', openCalendarModal);
-
-    // Close calendar modal on backdrop click
-    calendarModalBackdrop.addEventListener('click', closeCalendarModal);
-
-    // ========================================
-    // DATE SELECTION - CALENDAR
-    // ========================================
-    let currentDisplayMonth = new Date().getMonth();
-    let currentDisplayYear = new Date().getFullYear();
-
-    function initializeYearSelect() {
-        const today = new Date();
-        for (let year = today.getFullYear(); year <= today.getFullYear() + 1; year++) {
-            const option = document.createElement('option');
-            option.value = year;
-            option.textContent = year;
-            if (year === today.getFullYear()) option.selected = true;
-            calendarYearSelect.appendChild(option);
-        }
-    }
-
-    function renderCalendar() {
-        const firstDay = new Date(currentDisplayYear, currentDisplayMonth, 1);
-        const lastDay = new Date(currentDisplayYear, currentDisplayMonth + 1, 0);
-        const daysInMonth = lastDay.getDate();
-        const startingDayOfWeek = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1; // Monday = 0
-
-        calendarDaysContainer.innerHTML = '';
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        // Previous month's days
-        const prevMonthLastDay = new Date(currentDisplayYear, currentDisplayMonth, 0).getDate();
-        for (let i = startingDayOfWeek - 1; i >= 0; i--) {
-            const dayBtn = document.createElement('button');
-            dayBtn.className = 'calendar-day other-month';
-            dayBtn.textContent = prevMonthLastDay - i;
-            dayBtn.disabled = true;
-            calendarDaysContainer.appendChild(dayBtn);
-        }
-
-        // Current month's days
-        for (let day = 1; day <= daysInMonth; day++) {
-            const dayBtn = document.createElement('button');
-            dayBtn.className = 'calendar-day';
-            dayBtn.textContent = day;
-            dayBtn.type = 'button';
-
-            const currentDate = new Date(currentDisplayYear, currentDisplayMonth, day);
-            currentDate.setHours(0, 0, 0, 0);
-
-            // Mark today
-            if (currentDate.getTime() === today.getTime()) {
-                dayBtn.classList.add('today');
-            }
-
-            // Mark selected date
-            const year = currentDate.getFullYear();
-            const month = String(currentDate.getMonth() + 1).padStart(2, '0');
-            const date = String(currentDate.getDate()).padStart(2, '0');
-            const dateStr = `${year}-${month}-${date}`;
-            if (dateStr === selectedDate) {
-                dayBtn.classList.add('active');
-            }
-
-            // Disable past dates
-            if (currentDate < today) {
-                dayBtn.disabled = true;
-                dayBtn.classList.add('other-month');
-            }
-
-            dayBtn.addEventListener('click', () => {
-                const year = currentDate.getFullYear();
-                const month = String(currentDate.getMonth() + 1).padStart(2, '0');
-                const date = String(currentDate.getDate()).padStart(2, '0');
-                const iso = `${year}-${month}-${date}`;
-                setSelectedDate(iso);
-                updateSelectedDateDisplay();
-                renderCalendar();
-                updateQuickBtns();
-                closeCalendarModal();
-            });
-
-            calendarDaysContainer.appendChild(dayBtn);
-        }
-
-        // Next month's days
-        const totalCells = calendarDaysContainer.children.length;
-        const remainingCells = 42 - totalCells; // 6 weeks * 7 days
-        for (let day = 1; day <= remainingCells; day++) {
-            const dayBtn = document.createElement('button');
-            dayBtn.className = 'calendar-day other-month';
-            dayBtn.textContent = day;
-            dayBtn.disabled = true;
-            calendarDaysContainer.appendChild(dayBtn);
-        }
-    }
-
-    function setSelectedDate(iso) {
-        selectedDate = iso;
-        document.body.dataset.selectedDate = selectedDate;
-    }
-
-    function updateQuickBtns() {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-
-        let selectedDateObj;
-        if (selectedDate) {
-            const [year, month, day] = selectedDate.split('-');
-            selectedDateObj = new Date(year, month - 1, day);
-        }
-
-        quickBtns.forEach(btn => {
-            btn.classList.remove('active');
-            if (selectedDateObj) {
-                if (btn.dataset.days === '0' && selectedDateObj.getTime() === today.getTime()) {
-                    btn.classList.add('active');
-                } else if (btn.dataset.days === '1' && selectedDateObj.getTime() === tomorrow.getTime()) {
-                    btn.classList.add('active');
-                }
-            }
-        });
-    }
-
-    // Quick button handlers
-    quickBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const daysOffset = parseInt(btn.dataset.days);
-            const newDate = new Date();
-            newDate.setDate(newDate.getDate() + daysOffset);
-            newDate.setHours(0, 0, 0, 0);
-
-            currentDisplayMonth = newDate.getMonth();
-            currentDisplayYear = newDate.getFullYear();
-
-            calendarMonthSelect.value = currentDisplayMonth;
-            calendarYearSelect.value = currentDisplayYear;
-
-            const year = newDate.getFullYear();
-            const month = String(newDate.getMonth() + 1).padStart(2, '0');
-            const day = String(newDate.getDate()).padStart(2, '0');
-            const iso = `${year}-${month}-${day}`;
-            setSelectedDate(iso);
-            updateSelectedDateDisplay();
-            renderCalendar();
-            updateQuickBtns();
-            closeCalendarModal();
-        });
-    });
-
-    // Calendar navigation
-    calendarMonthSelect.addEventListener('change', (e) => {
-        currentDisplayMonth = parseInt(e.target.value);
-        renderCalendar();
-        updateQuickBtns();
-    });
-
-    calendarYearSelect.addEventListener('change', (e) => {
-        currentDisplayYear = parseInt(e.target.value);
-        renderCalendar();
-        updateQuickBtns();
-    });
-
-    calendarPrevBtn.addEventListener('click', () => {
-        currentDisplayMonth--;
-        if (currentDisplayMonth < 0) {
-            currentDisplayMonth = 11;
-            currentDisplayYear--;
-        }
-        calendarMonthSelect.value = currentDisplayMonth;
-        calendarYearSelect.value = currentDisplayYear;
-        renderCalendar();
-        updateQuickBtns();
-    });
-
-    calendarNextBtn.addEventListener('click', () => {
-        currentDisplayMonth++;
-        if (currentDisplayMonth > 11) {
-            currentDisplayMonth = 0;
-            currentDisplayYear++;
-        }
-        calendarMonthSelect.value = currentDisplayMonth;
-        calendarYearSelect.value = currentDisplayYear;
-        renderCalendar();
-        updateQuickBtns();
-    });
-
-    // Initialize
-    initializeYearSelect();
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
-    setSelectedDate(`${year}-${month}-${day}`);
-    updateSelectedDateDisplay();
-    renderCalendar();
-    updateQuickBtns();
-
-    // ========================================
     // MODAL MANAGEMENT
     // ========================================
     function openModal(title, date, time) {
@@ -852,9 +613,6 @@ document.addEventListener('DOMContentLoaded', function () {
     // Close modal with Escape key
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
-            if (!calendarModal.classList.contains('hidden')) {
-                closeCalendarModal();
-            }
             if (!modal.classList.contains('hidden')) {
                 closeModal();
             }
