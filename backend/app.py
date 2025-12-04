@@ -3,7 +3,6 @@ from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
 import os
-import json
 
 app = Flask(
     __name__,
@@ -477,7 +476,16 @@ def create_booking():
     film_date = data.get("film_date")
     film_time = data.get("film_time")
     seats = data.get("seats", 1)
-    total_price = float(PRICES["adult"]) * int(seats)
+    seat_categories = data.get("seat_categories", [])
+
+    # Calculate total price based on seat categories
+    total_price = 0
+    if seat_categories and len(seat_categories) == int(seats):
+        for category in seat_categories:
+            total_price += float(PRICES.get(category, PRICES["adult"]))
+    else:
+        # Fallback: use adult price if no categories provided
+        total_price = float(PRICES["adult"]) * int(seats)
 
     try:
         conn = sqlite3.connect(DB_PATH)
@@ -499,7 +507,8 @@ def create_booking():
                 "film_date": film_date,
                 "film_time": film_time,
                 "seats": seats,
-                "total_price": total_price
+                "total_price": total_price,
+                "seat_categories": seat_categories
             }
         })
 
@@ -553,7 +562,16 @@ def update_booking(booking_id):
     film_date = data.get("film_date")
     film_time = data.get("film_time")
     seats = data.get("seats", 1)
-    total_price = float(PRICES["adult"]) * int(seats)
+    seat_categories = data.get("seat_categories", [])
+
+    # Calculate total price based on seat categories
+    total_price = 0
+    if seat_categories and len(seat_categories) == int(seats):
+        for category in seat_categories:
+            total_price += float(PRICES.get(category, PRICES["adult"]))
+    else:
+        # Fallback: use adult price if no categories provided
+        total_price = float(PRICES["adult"]) * int(seats)
 
     try:
         conn = sqlite3.connect(DB_PATH)

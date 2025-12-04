@@ -57,6 +57,25 @@ document.addEventListener('DOMContentLoaded', function () {
         "Kung Fu Panda 4": ["10:45", "14:15", "19:30"]
     };
 
+    // Price categories
+    const PRICES = {
+        "adult": 9.0,
+        "child": 6.0,
+        "senior": 7.0,
+        "student": 7.5,
+        "disabled": 6.5,
+        "unemployed": 6.5
+    };
+
+    const PRICE_LABELS = {
+        "adult": "Adulte - 9.0€",
+        "child": "Enfants - 6.0€",
+        "senior": "Seniors - 7.0€",
+        "student": "Étudiants - 7.5€",
+        "disabled": "Personnes handicapées - 6.5€",
+        "unemployed": "Demandeurs d'emploi - 6.5€"
+    };
+
     // Load reservations from localStorage
     function loadReservations() {
         const stored = localStorage.getItem('cinemaReservations');
@@ -559,10 +578,66 @@ document.addEventListener('DOMContentLoaded', function () {
         modal.setAttribute('aria-hidden', 'true');
         document.body.style.overflow = 'auto';
         bookingForm.reset();
+        // Hide seat categories section
+        document.getElementById('seat-categories').classList.add('hidden');
         // Clean up editing state
         delete bookingForm.dataset.editingBookingId;
     }
 
+    // ========================================
+    // SEAT CATEGORIES MANAGEMENT
+    // ========================================
+    function generateSeatCategories(count) {
+        const seatCategoryList = document.getElementById('seat-category-list');
+        const seatCategories = document.getElementById('seat-categories');
+
+        seatCategoryList.innerHTML = '';
+
+        for (let i = 1; i <= count; i++) {
+            const seatRow = document.createElement('div');
+            seatRow.className = 'seat-row';
+            seatRow.innerHTML = `
+                <label>Place ${i}</label>
+                <select class="seat-category-select" data-seat="${i}">
+                    ${Object.entries(PRICE_LABELS).map(([key, label]) =>
+                        `<option value="${key}">${label}</option>`
+                    ).join('')}
+                </select>
+                <span class="seat-price" data-seat="${i}">9.00€</span>
+            `;
+            seatCategoryList.appendChild(seatRow);
+
+            // Add event listener pour calculer le prix
+            const select = seatRow.querySelector('.seat-category-select');
+            select.addEventListener('change', calculateTotalPrice);
+        }
+
+        // Show the seat categories section
+        seatCategories.classList.remove('hidden');
+        calculateTotalPrice();
+    }
+
+    function calculateTotalPrice() {
+        const selects = document.querySelectorAll('.seat-category-select');
+        let totalPrice = 0;
+
+        selects.forEach((select) => {
+            const category = select.value;
+            const price = PRICES[category];
+            const seatNumber = select.dataset.seat;
+
+            // Update the price display for this seat
+            const priceSpan = document.querySelector(`.seat-price[data-seat="${seatNumber}"]`);
+            if (priceSpan) {
+                priceSpan.textContent = price.toFixed(2) + '€';
+            }
+
+            totalPrice += price;
+        });
+
+        // Update total price
+        document.getElementById('total-price').textContent = totalPrice.toFixed(2);
+    }
 
     // ========================================
     // RESERVE BUTTON HANDLING
@@ -637,6 +712,17 @@ document.addEventListener('DOMContentLoaded', function () {
         populateShowtimes(bkFilm.value);
     });
 
+    // Generate seat categories when seat count changes
+    const bkCount = document.getElementById('bk-count');
+    bkCount.addEventListener('change', function() {
+        const count = parseInt(this.value);
+        if (count > 0) {
+            generateSeatCategories(count);
+        } else {
+            document.getElementById('seat-categories').classList.add('hidden');
+        }
+    });
+
     // ========================================
     // BOOKING FORM SUBMISSION
     // ========================================
@@ -675,6 +761,20 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
+        // Collect seat categories
+        const seatCategories = [];
+        const categorySelects = document.querySelectorAll('.seat-category-select');
+        if (categorySelects.length > 0) {
+            categorySelects.forEach((select) => {
+                seatCategories.push(select.value);
+            });
+        } else {
+            // If no categories selected (shouldn't happen), use default
+            for (let i = 0; i < count; i++) {
+                seatCategories.push('adult');
+            }
+        }
+
         const isEditing = bookingForm.dataset.editingBookingId;
         const method = isEditing ? 'PUT' : 'POST';
         const endpoint = isEditing ? `/api/booking/${isEditing}` : '/api/booking';
@@ -687,7 +787,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     film_title: film,
                     film_date: date,
                     film_time: time,
-                    seats: count
+                    seats: count,
+                    seat_categories: seatCategories
                 })
             });
 
