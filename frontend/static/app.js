@@ -40,8 +40,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const authModal = document.getElementById('auth-modal');
     const loginForm = document.getElementById('login-form');
     const registerForm = document.getElementById('register-form');
-    const loginTabBtn = document.getElementById('login-tab-btn');
-    const registerTabBtn = document.getElementById('register-tab-btn');
     const loginFormSection = document.getElementById('login-form-section');
     const registerFormSection = document.getElementById('register-form-section');
     const logoutBtn = document.getElementById('logout-btn');
@@ -57,6 +55,20 @@ document.addEventListener('DOMContentLoaded', function () {
     // ========================================
     let selectedDate = null;
     let reservations = [];
+
+    // Movie showtimes data - Extracted from backend
+    const movieShowtimes = {
+        "Inside Out 2": ["14:00", "17:30", "20:45"],
+        "Moana 2": ["13:15", "16:00", "19:00"],
+        "Despicable Me 4": ["15:00", "18:30", "22:00"],
+        "Deadpool & Wolverine": ["12:45", "15:30", "20:15"],
+        "Dune: Part Two": ["16:00", "19:45", "23:00"],
+        "Wicked": ["11:30", "14:30", "18:00"],
+        "Twisters": ["13:00", "17:00", "21:00"],
+        "Furiosa: A Mad Max Saga": ["12:00", "15:00", "18:30"],
+        "Godzilla x Kong: The New Empire": ["17:15", "20:30"],
+        "Kung Fu Panda 4": ["10:45", "14:15", "19:30"]
+    };
 
     // Load reservations from localStorage
     function loadReservations() {
@@ -104,6 +116,77 @@ document.addEventListener('DOMContentLoaded', function () {
         accountLoggedOut.classList.remove('hidden');
     }
 
+    // ========================================
+    // VALIDATION FUNCTIONS
+    // ========================================
+
+    function validateEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    }
+
+    function validatePassword(password) {
+        const hasUpperCase = /[A-Z]/.test(password);
+        const hasDigit = /\d/.test(password);
+        const hasMinLength = password.length >= 8;
+
+        if (!hasMinLength) {
+            return { valid: false, message: 'Le mot de passe doit contenir au moins 8 caractères' };
+        }
+        if (!hasUpperCase) {
+            return { valid: false, message: 'Le mot de passe doit contenir au moins une majuscule' };
+        }
+        if (!hasDigit) {
+            return { valid: false, message: 'Le mot de passe doit contenir au moins un chiffre' };
+        }
+        return { valid: true, message: '' };
+    }
+
+    function validateRegisterForm(email, password, nom, prenom, sexe, ville, habitation) {
+        if (!email || !email.trim()) {
+            return { valid: false, message: 'L\'email est requis' };
+        }
+        if (!validateEmail(email)) {
+            return { valid: false, message: 'L\'email n\'est pas valide' };
+        }
+        if (!password || !password.trim()) {
+            return { valid: false, message: 'Le mot de passe est requis' };
+        }
+        const passwordValidation = validatePassword(password);
+        if (!passwordValidation.valid) {
+            return passwordValidation;
+        }
+        if (!nom || !nom.trim()) {
+            return { valid: false, message: 'Le nom est requis' };
+        }
+        if (!prenom || !prenom.trim()) {
+            return { valid: false, message: 'Le prénom est requis' };
+        }
+        if (!sexe || !sexe.trim()) {
+            return { valid: false, message: 'Le sexe est requis' };
+        }
+        if (!ville || !ville.trim()) {
+            return { valid: false, message: 'La ville est requise' };
+        }
+        if (!habitation || !habitation.trim()) {
+            return { valid: false, message: 'L\'habitation est requise' };
+        }
+        return { valid: true, message: '' };
+    }
+
+    function validateLoginForm(email, password) {
+        if (!email || !email.trim()) {
+            return { valid: false, message: 'L\'email est requis' };
+        }
+        if (!validateEmail(email)) {
+            return { valid: false, message: 'L\'email n\'est pas valide' };
+        }
+        if (!password || !password.trim()) {
+            return { valid: false, message: 'Le mot de passe est requis' };
+        }
+        return { valid: true, message: '' };
+    }
+
     function openAuthModal() {
         authModal.classList.remove('hidden');
         authModal.setAttribute('aria-hidden', 'false');
@@ -116,20 +199,17 @@ document.addEventListener('DOMContentLoaded', function () {
         document.body.style.overflow = 'auto';
         loginForm.reset();
         registerForm.reset();
+        showLoginForm(); // Reset to login tab
     }
 
     function showLoginForm() {
         loginFormSection.classList.remove('hidden');
         registerFormSection.classList.add('hidden');
-        loginTabBtn.classList.add('active');
-        registerTabBtn.classList.remove('active');
     }
 
     function showRegisterForm() {
         loginFormSection.classList.add('hidden');
         registerFormSection.classList.remove('hidden');
-        loginTabBtn.classList.remove('active');
-        registerTabBtn.classList.add('active');
     }
 
     // Account button toggle
@@ -150,6 +230,17 @@ document.addEventListener('DOMContentLoaded', function () {
         const email = document.getElementById('login-email').value;
         const password = document.getElementById('login-password').value;
         const errorEl = document.getElementById('login-error');
+
+        // Validate form
+        const validation = validateLoginForm(email, password);
+        if (!validation.valid) {
+            errorEl.textContent = validation.message;
+            errorEl.classList.remove('hidden');
+            return;
+        }
+
+        // Clear previous errors
+        errorEl.classList.add('hidden');
 
         try {
             const response = await fetch('/api/login', {
@@ -188,6 +279,17 @@ document.addEventListener('DOMContentLoaded', function () {
         const habitation = document.getElementById('register-habitation').value;
         const errorEl = document.getElementById('register-error');
 
+        // Validate form
+        const validation = validateRegisterForm(email, password, nom, prenom, sexe, ville, habitation);
+        if (!validation.valid) {
+            errorEl.textContent = validation.message;
+            errorEl.classList.remove('hidden');
+            return;
+        }
+
+        // Clear previous errors
+        errorEl.classList.add('hidden');
+
         try {
             const response = await fetch('/api/register', {
                 method: 'POST',
@@ -213,28 +315,51 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // Tab switching
-    loginTabBtn.addEventListener('click', () => {
-        showLoginForm();
-        openAuthModal();
-        accountMenu.classList.add('hidden');
-    });
-    registerTabBtn.addEventListener('click', () => {
-        showRegisterForm();
-        openAuthModal();
-        accountMenu.classList.add('hidden');
-    });
+    // Auth mode switching - from login to register
+    const switchToRegisterBtn = document.getElementById('switch-to-register');
+    if (switchToRegisterBtn) {
+        switchToRegisterBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            showRegisterForm();
+        });
+    }
+
+    // Auth mode switching - from register to login
+    const switchToLoginBtn = document.getElementById('switch-to-login');
+    if (switchToLoginBtn) {
+        switchToLoginBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            showLoginForm();
+        });
+    }
+
+    // Login button from menu
+    const loginBtnMenu = document.getElementById('login-btn-menu');
+    if (loginBtnMenu) {
+        loginBtnMenu.addEventListener('click', () => {
+            showLoginForm();
+            openAuthModal();
+            accountMenu.classList.add('hidden');
+        });
+    }
 
     // Logout
-    logoutBtn.addEventListener('click', async () => {
+    logoutBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
         try {
             await fetch('/api/logout', { method: 'POST' });
             currentUser = null;
             updateUIForLoggedOut();
             accountMenu.classList.add('hidden');
             showSuccessNotification('Déconnecté');
+            // Force update the UI
+            setTimeout(() => {
+                window.location.reload();
+            }, 500);
         } catch (error) {
             console.error('Error logging out:', error);
+            showSuccessNotification('Erreur lors de la déconnexion');
         }
     });
 
@@ -251,12 +376,31 @@ document.addEventListener('DOMContentLoaded', function () {
                     const bookingEl = document.createElement('div');
                     bookingEl.className = 'booking-item';
                     bookingEl.innerHTML = `
-                        <h4>${booking.film_title}</h4>
+                        <div class="booking-header">
+                            <h4>${booking.film_title}</h4>
+                            <div class="booking-actions">
+                                <button class="booking-btn edit-btn" data-booking-id="${booking.id}" title="Modifier">✏️</button>
+                                <button class="booking-btn delete-btn" data-booking-id="${booking.id}" title="Supprimer">🗑️</button>
+                            </div>
+                        </div>
                         <p><strong>Date:</strong> ${booking.film_date}</p>
                         <p><strong>Heure:</strong> ${booking.film_time}</p>
                         <p><strong>Places:</strong> ${booking.seats}</p>
                         <p class="booking-price">Total: ${booking.total_price}€</p>
                     `;
+
+                    // Add event listeners for edit and delete buttons
+                    const editBtn = bookingEl.querySelector('.edit-btn');
+                    const deleteBtn = bookingEl.querySelector('.delete-btn');
+
+                    editBtn.addEventListener('click', () => {
+                        editBooking(booking);
+                    });
+
+                    deleteBtn.addEventListener('click', () => {
+                        deleteBooking(booking.id, bookingEl);
+                    });
+
                     bookingsList.appendChild(bookingEl);
                 });
             } else {
@@ -270,6 +414,85 @@ document.addEventListener('DOMContentLoaded', function () {
             console.error('Error loading bookings:', error);
         }
     });
+
+    // ========================================
+    // BOOKING MANAGEMENT - EDIT & DELETE
+    // ========================================
+
+    function populateShowtimes(filmTitle) {
+        // Clear existing options except the first one
+        while (bkTime.options.length > 1) {
+            bkTime.remove(1);
+        }
+
+        // Get showtimes for the selected film
+        const showtimes = movieShowtimes[filmTitle] || [];
+
+        // Add showtimes as options
+        showtimes.forEach(time => {
+            const option = document.createElement('option');
+            option.value = time;
+            option.textContent = time;
+            bkTime.appendChild(option);
+        });
+    }
+
+    function editBooking(booking) {
+        // Remplir le formulaire de réservation avec les données actuelles
+        bkFilm.value = booking.film_title;
+        bkDate.value = booking.film_date;
+        document.getElementById('bk-count').value = booking.seats;
+
+        // Populate showtimes based on the film
+        populateShowtimes(booking.film_title);
+
+        // Set the time value
+        bkTime.value = booking.film_time;
+
+        // Stocker l'ID de la réservation en édition
+        bookingForm.dataset.editingBookingId = booking.id;
+
+        // Fermer le modal des réservations et ouvrir le modal de réservation
+        bookingsModal.classList.add('hidden');
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    async function deleteBooking(bookingId, bookingEl) {
+        if (!confirm('Êtes-vous sûr de vouloir supprimer cette réservation ?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/booking/${bookingId}`, {
+                method: 'DELETE'
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                // Supprimer l'élément du DOM avec animation
+                bookingEl.style.opacity = '0';
+                bookingEl.style.transform = 'translateX(-100%)';
+                bookingEl.style.transition = 'all 0.3s ease';
+
+                setTimeout(() => {
+                    bookingEl.remove();
+                    showSuccessNotification('Réservation supprimée');
+
+                    // Si c'est la dernière réservation, afficher le message vide
+                    if (bookingsList.children.length === 0) {
+                        bookingsList.innerHTML = '<p>Aucune réservation pour le moment.</p>';
+                    }
+                }, 300);
+            } else {
+                alert('Erreur: ' + data.error);
+            }
+        } catch (error) {
+            console.error('Error deleting booking:', error);
+            alert('Erreur lors de la suppression');
+        }
+    }
 
     // ========================================
     // DATE SELECTION - CALENDAR MODAL
@@ -287,7 +510,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function updateSelectedDateDisplay() {
         if (selectedDate) {
-            const dateObj = new Date(selectedDate);
+            const [year, month, day] = selectedDate.split('-');
+            const dateObj = new Date(year, month - 1, day);
             const options = { weekday: 'short', month: 'short', day: 'numeric' };
             selectedDateDisplay.textContent = dateObj.toLocaleDateString('fr-FR', options);
         }
@@ -352,7 +576,11 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             // Mark selected date
-            if (currentDate.toISOString().split('T')[0] === selectedDate) {
+            const year = currentDate.getFullYear();
+            const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+            const date = String(currentDate.getDate()).padStart(2, '0');
+            const dateStr = `${year}-${month}-${date}`;
+            if (dateStr === selectedDate) {
                 dayBtn.classList.add('active');
             }
 
@@ -363,7 +591,10 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             dayBtn.addEventListener('click', () => {
-                const iso = currentDate.toISOString().split('T')[0];
+                const year = currentDate.getFullYear();
+                const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+                const date = String(currentDate.getDate()).padStart(2, '0');
+                const iso = `${year}-${month}-${date}`;
                 setSelectedDate(iso);
                 updateSelectedDateDisplay();
                 renderCalendar();
@@ -397,14 +628,20 @@ document.addEventListener('DOMContentLoaded', function () {
         const tomorrow = new Date(today);
         tomorrow.setDate(tomorrow.getDate() + 1);
 
-        const selectedDateObj = new Date(selectedDate);
+        let selectedDateObj;
+        if (selectedDate) {
+            const [year, month, day] = selectedDate.split('-');
+            selectedDateObj = new Date(year, month - 1, day);
+        }
 
         quickBtns.forEach(btn => {
             btn.classList.remove('active');
-            if (btn.dataset.days === '0' && selectedDateObj.getTime() === today.getTime()) {
-                btn.classList.add('active');
-            } else if (btn.dataset.days === '1' && selectedDateObj.getTime() === tomorrow.getTime()) {
-                btn.classList.add('active');
+            if (selectedDateObj) {
+                if (btn.dataset.days === '0' && selectedDateObj.getTime() === today.getTime()) {
+                    btn.classList.add('active');
+                } else if (btn.dataset.days === '1' && selectedDateObj.getTime() === tomorrow.getTime()) {
+                    btn.classList.add('active');
+                }
             }
         });
     }
@@ -423,7 +660,10 @@ document.addEventListener('DOMContentLoaded', function () {
             calendarMonthSelect.value = currentDisplayMonth;
             calendarYearSelect.value = currentDisplayYear;
 
-            const iso = newDate.toISOString().split('T')[0];
+            const year = newDate.getFullYear();
+            const month = String(newDate.getMonth() + 1).padStart(2, '0');
+            const day = String(newDate.getDate()).padStart(2, '0');
+            const iso = `${year}-${month}-${day}`;
             setSelectedDate(iso);
             updateSelectedDateDisplay();
             renderCalendar();
@@ -473,7 +713,10 @@ document.addEventListener('DOMContentLoaded', function () {
     initializeYearSelect();
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    setSelectedDate(today.toISOString().split('T')[0]);
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    setSelectedDate(`${year}-${month}-${day}`);
     updateSelectedDateDisplay();
     renderCalendar();
     updateQuickBtns();
@@ -484,7 +727,15 @@ document.addEventListener('DOMContentLoaded', function () {
     function openModal(title, date, time) {
         bkFilm.value = title;
         bkDate.value = formatDateForDisplay(date);
-        bkTime.value = time;
+
+        // Populate showtimes based on the selected film
+        populateShowtimes(title);
+
+        // Set the time value if provided
+        if (time) {
+            bkTime.value = time;
+        }
+
         modal.classList.remove('hidden');
         modal.setAttribute('aria-hidden', 'false');
         document.body.style.overflow = 'hidden';
@@ -495,6 +746,8 @@ document.addEventListener('DOMContentLoaded', function () {
         modal.setAttribute('aria-hidden', 'true');
         document.body.style.overflow = 'auto';
         bookingForm.reset();
+        // Clean up editing state
+        delete bookingForm.dataset.editingBookingId;
     }
 
     // ========================================
@@ -593,6 +846,11 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
+    // Update showtimes when film selection changes
+    bkFilm.addEventListener('change', function() {
+        populateShowtimes(this.value);
+    });
+
     // ========================================
     // BOOKING FORM SUBMISSION
     // ========================================
@@ -610,9 +868,13 @@ document.addEventListener('DOMContentLoaded', function () {
         const date = bkDate.value;
         const time = bkTime.value;
 
+        const isEditing = bookingForm.dataset.editingBookingId;
+        const method = isEditing ? 'PUT' : 'POST';
+        const endpoint = isEditing ? `/api/booking/${isEditing}` : '/api/booking';
+
         try {
-            const response = await fetch('/api/booking', {
-                method: 'POST',
+            const response = await fetch(endpoint, {
+                method: method,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     film_title: film,
@@ -625,7 +887,14 @@ document.addEventListener('DOMContentLoaded', function () {
             const data = await response.json();
 
             if (data.success) {
-                showSuccessNotification(`${currentUser.prenom}`, film, date, time, count);
+                const message = isEditing
+                    ? `Réservation modifiée ! ${film} • ${date} à ${time} • ${count} place(s)`
+                    : `Réservation confirmée ! ${film} • ${date} à ${time} • ${count} place(s)`;
+                showSuccessNotification(message);
+
+                // Nettoyer les données d'édition
+                delete bookingForm.dataset.editingBookingId;
+
                 closeModal();
             } else {
                 alert('Erreur: ' + data.error);
@@ -648,15 +917,14 @@ document.addEventListener('DOMContentLoaded', function () {
     // ========================================
     // NOTIFICATIONS
     // ========================================
-    function showSuccessNotification(name, film, date, time, seats) {
+    function showSuccessNotification(message) {
         const notification = document.createElement('div');
         notification.className = 'notification success';
         notification.innerHTML = `
             <div class="notification-content">
                 <span class="notification-icon">✓</span>
                 <div class="notification-text">
-                    <strong>Réservation confirmée !</strong>
-                    <p>${name} • ${film} • ${date} à ${time} • ${seats} place(s)</p>
+                    <p>${message}</p>
                 </div>
             </div>
         `;

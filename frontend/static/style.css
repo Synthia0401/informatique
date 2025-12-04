@@ -652,9 +652,35 @@ main {
     box-shadow: 0 0 0 3px rgba(255, 140, 66, 0.1);
 }
 
-.calendar-select option {
+.calendar-select option,
+#bk-count option,
+#bk-time option {
     background: var(--dark-bg);
     color: var(--text-primary);
+}
+
+#bk-count,
+#bk-time {
+    background: var(--dark-bg);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    padding: 10px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    width: 100%;
+}
+
+#bk-count:hover,
+#bk-time:hover {
+    border-color: var(--primary-color);
+}
+
+#bk-count:focus,
+#bk-time:focus {
+    outline: none;
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 3px rgba(255, 140, 66, 0.1);
 }
 
 .calendar-weekdays {
@@ -1028,11 +1054,18 @@ main {
     background: var(--card-bg);
     border-radius: 12px;
     padding: 40px;
-    max-width: 500px;
+    max-width: 550px;
     width: 90%;
+    max-height: 88vh;
+    overflow-y: auto;
     box-shadow: var(--shadow);
     border: 1px solid var(--border-color);
     animation: slideUp 0.3s ease;
+}
+
+.modal-content.auth-modal {
+    max-width: 480px;
+    padding: 28px 32px;
 }
 
 @keyframes slideUp {
@@ -1068,6 +1101,11 @@ main {
     font-weight: 700;
     margin-bottom: 30px;
     color: var(--text-primary);
+}
+
+.modal-content.auth-modal .modal-title {
+    font-size: 24px;
+    margin-bottom: 20px;
 }
 
 /* ========================================
@@ -1236,6 +1274,14 @@ main {
 
     .modal-content {
         padding: 30px 20px;
+    }
+
+    .auth-modal .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .auth-modal .modal-content {
+        max-height: 90vh;
     }
 }
 
@@ -1440,62 +1486,74 @@ main {
 .auth-modal .booking-form {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 14px;
 }
 
 .auth-modal .form-group {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
 }
 
 .auth-modal .form-group label {
     font-weight: 600;
-    font-size: 13px;
-    color: var(--text-secondary);
+    font-size: 11px;
+    color: var(--accent-color);
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.4px;
+    margin-bottom: 2px;
 }
 
 .auth-modal .form-group input,
 .auth-modal .form-group select {
-    padding: 12px 14px;
+    padding: 10px 12px;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: 6px;
     color: var(--text-primary);
     font-family: 'Poppins', sans-serif;
-    font-size: 14px;
+    font-size: 13px;
     transition: all 0.2s ease;
+}
+
+.auth-modal .form-group input::placeholder {
+    color: rgba(255, 255, 255, 0.3);
 }
 
 .auth-modal .form-group input:focus,
 .auth-modal .form-group select:focus {
     outline: none;
     background: rgba(255, 255, 255, 0.08);
-    border-color: var(--accent-color);
-    box-shadow: 0 0 0 3px rgba(255, 217, 61, 0.1);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(255, 107, 74, 0.1);
+}
+
+.auth-modal .form-group select option {
+    background: #2a2a2a;
+    color: #f5f5f5;
+    padding: 8px;
+    margin: 4px 0;
 }
 
 .auth-modal .form-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 16px;
+    gap: 12px;
 }
 
 .auth-modal .btn-primary {
-    padding: 14px 24px;
+    padding: 12px 20px;
     background: var(--accent-color);
     color: #000;
     border: none;
-    border-radius: 8px;
+    border-radius: 6px;
     font-weight: 700;
-    font-size: 15px;
+    font-size: 13px;
     cursor: pointer;
     transition: all 0.3s ease;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-top: 8px;
+    letter-spacing: 0.4px;
+    margin-top: 6px;
 }
 
 .auth-modal .btn-primary:hover {
@@ -1521,6 +1579,30 @@ main {
 
 .error-message.hidden {
     display: none;
+}
+
+.auth-switch-link {
+    text-align: center;
+    margin-top: 16px;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.link-btn {
+    background: none;
+    border: none;
+    color: var(--accent-color);
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+    padding: 0;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.link-btn:hover {
+    color: var(--primary-color);
+    text-decoration: underline;
 }
 
 /* ========================================
@@ -1555,4 +1637,48 @@ main {
     color: var(--text-primary);
     font-weight: 600;
     margin-top: 10px;
+}
+
+.booking-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.booking-header h4 {
+    flex: 1;
+    margin: 0;
+}
+
+.booking-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.booking-btn {
+    background: none;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 6px 10px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    min-height: 32px;
+}
+
+.booking-btn:hover {
+    background: rgba(255, 107, 74, 0.1);
+    border-color: var(--primary-color);
+    transform: scale(1.1);
+}
+
+.booking-btn.delete-btn:hover {
+    background: rgba(255, 107, 107, 0.15);
+    border-color: #ff6b6b;
 }

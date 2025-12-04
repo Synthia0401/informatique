@@ -425,5 +425,78 @@ def my_bookings():
         return jsonify({"success": False, "error": str(e)}), 500
 
 
+@app.route("/api/booking/<int:booking_id>", methods=["PUT"])
+def update_booking(booking_id):
+    if "user_id" not in session:
+        return jsonify({"success": False, "error": "Non authentifié"}), 401
+
+    data = request.get_json()
+    user_id = session["user_id"]
+    film_title = data.get("film_title")
+    film_date = data.get("film_date")
+    film_time = data.get("film_time")
+    seats = data.get("seats", 1)
+    total_price = float(PRICES["adult"]) * int(seats)
+
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+
+        # Vérifier que la réservation appartient à l'utilisateur
+        cursor.execute("SELECT user_id FROM reservations WHERE id = ?", (booking_id,))
+        result = cursor.fetchone()
+
+        if not result:
+            return jsonify({"success": False, "error": "Réservation non trouvée"}), 404
+
+        if result[0] != user_id:
+            return jsonify({"success": False, "error": "Non autorisé"}), 403
+
+        # Mettre à jour la réservation
+        cursor.execute(
+            "UPDATE reservations SET film_title = ?, film_date = ?, film_time = ?, seats = ?, total_price = ? WHERE id = ?",
+            (film_title, film_date, film_time, seats, total_price, booking_id)
+        )
+        conn.commit()
+        conn.close()
+
+        return jsonify({"success": True, "message": "Réservation mise à jour"})
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/booking/<int:booking_id>", methods=["DELETE"])
+def delete_booking(booking_id):
+    if "user_id" not in session:
+        return jsonify({"success": False, "error": "Non authentifié"}), 401
+
+    user_id = session["user_id"]
+
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+
+        # Vérifier que la réservation appartient à l'utilisateur
+        cursor.execute("SELECT user_id FROM reservations WHERE id = ?", (booking_id,))
+        result = cursor.fetchone()
+
+        if not result:
+            return jsonify({"success": False, "error": "Réservation non trouvée"}), 404
+
+        if result[0] != user_id:
+            return jsonify({"success": False, "error": "Non autorisé"}), 403
+
+        # Supprimer la réservation
+        cursor.execute("DELETE FROM reservations WHERE id = ?", (booking_id,))
+        conn.commit()
+        conn.close()
+
+        return jsonify({"success": True, "message": "Réservation supprimée"})
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
 if __name__ == "__main__":
     app.run(debug=True)

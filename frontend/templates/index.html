@@ -34,8 +34,7 @@
                         <button id="logout-btn" class="account-menu-item logout">Déconnexion</button>
                     </div>
                     <div id="account-logged-out">
-                        <button id="login-tab-btn" class="tab-btn active">Connexion</button>
-                        <button id="register-tab-btn" class="tab-btn">Créer un compte</button>
+                        <button id="login-btn-menu" class="account-menu-item">Connexion</button>
                     </div>
                 </div>
             </div>
@@ -222,7 +221,9 @@
                     </div>
                     <div class="form-group">
                         <label for="bk-time">Séance</label>
-                        <input type="text" id="bk-time" readonly>
+                        <select id="bk-time">
+                            <option value="">Sélectionnez une séance</option>
+                        </select>
                     </div>
                 </div>
                 <div class="form-group">
@@ -250,12 +251,6 @@
         <div class="modal-content auth-modal">
             <button class="modal-close" aria-label="Fermer la modale">✕</button>
 
-            <!-- Tab Buttons -->
-            <div id="account-logged-out" style="margin: 0 -32px 0 -32px; margin-bottom: 0;">
-                <button id="login-tab-btn" class="tab-btn active">Connexion</button>
-                <button id="register-tab-btn" class="tab-btn">Créer un compte</button>
-            </div>
-
             <!-- Login Form -->
             <div id="login-form-section" class="auth-section">
                 <h2 class="modal-title">Connexion</h2>
@@ -271,6 +266,9 @@
                     <button type="submit" class="btn btn-primary" style="width: 100%;">Se connecter</button>
                     <div id="login-error" class="error-message hidden"></div>
                 </form>
+                <div class="auth-switch-link">
+                    Pas de compte? <button id="switch-to-register" class="link-btn">Créer un</button>
+                </div>
             </div>
 
             <!-- Register Form -->
@@ -317,6 +315,9 @@
                     <button type="submit" class="btn btn-primary" style="width: 100%;">Créer mon compte</button>
                     <div id="register-error" class="error-message hidden"></div>
                 </form>
+                <div class="auth-switch-link">
+                    Déjà connecté? <button id="switch-to-login" class="link-btn">Se connecter</button>
+                </div>
             </div>
         </div>
     </div>
