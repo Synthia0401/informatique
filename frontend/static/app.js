@@ -32,6 +32,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const registerFormSection = document.getElementById('register-form-section');
     const logoutBtn = document.getElementById('logout-btn');
     const myBookingsBtn = document.getElementById('my-bookings-btn');
+    const myBookingsBtnSection = document.getElementById('my-bookings-btn-hero');
     const bookingsModal = document.getElementById('bookings-modal');
     const bookingsList = document.getElementById('bookings-list');
 
@@ -42,6 +43,10 @@ document.addEventListener('DOMContentLoaded', function () {
     // STATE MANAGEMENT
     // ========================================
     let reservations = [];
+
+    // Cache for showtimes with IDs
+    let cachedShowtimes = [];
+    let selectedShowtime = null;
 
     // Movie showtimes data - Extracted from backend
     const movieShowtimes = {
@@ -115,11 +120,15 @@ document.addEventListener('DOMContentLoaded', function () {
         accountLoggedIn.classList.remove('hidden');
         document.getElementById('account-user-name').textContent = `${currentUser.prenom} ${currentUser.nom}`;
         document.getElementById('account-user-email').textContent = currentUser.email;
+        // Show "Mes réservations" button in prices section
+        myBookingsBtnSection.classList.remove('hidden');
     }
 
     function updateUIForLoggedOut() {
         accountLoggedIn.classList.add('hidden');
         accountLoggedOut.classList.remove('hidden');
+        // Hide "Mes réservations" button in prices section
+        myBookingsBtnSection.classList.add('hidden');
     }
 
     // ========================================
@@ -370,7 +379,8 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // My Bookings
-    myBookingsBtn.addEventListener('click', async () => {
+    // Function to load and display bookings
+    async function showMyBookings() {
         try {
             const response = await fetch('/api/my-bookings');
             const data = await response.json();
@@ -419,7 +429,11 @@ document.addEventListener('DOMContentLoaded', function () {
         } catch (error) {
             console.error('Error loading bookings:', error);
         }
-    });
+    }
+
+    // Add click listeners to both bookings buttons
+    myBookingsBtn.addEventListener('click', showMyBookings);
+    myBookingsBtnSection.addEventListener('click', showMyBookings);
 
     // ========================================
     // BOOKING MANAGEMENT - EDIT & DELETE
@@ -431,6 +445,10 @@ document.addEventListener('DOMContentLoaded', function () {
             bkTime.remove(1);
         }
 
+        // Reset cached showtimes and selected showtime
+        cachedShowtimes = [];
+        selectedShowtime = null;
+
         // Get the selected date
         const selectedDate = bkDate.value;
 
@@ -440,21 +458,25 @@ document.addEventListener('DOMContentLoaded', function () {
                 const response = await fetch(`/api/showtimes/${selectedDate}`);
                 const data = await response.json();
 
-                if (data && data.success) {
+                if (data && data.showtimes && data.showtimes.length > 0) {
                     const allShowtimes = data.showtimes || [];
                     // Filter by film title
                     const showtimes = allShowtimes.filter(s => s.film_title === filmTitle);
 
+                    console.log('Populated showtimes:', showtimes);
+                    cachedShowtimes = showtimes; // Cache the full showtime objects
+
                     // Add showtimes as options
                     showtimes.forEach(showtime => {
                         const option = document.createElement('option');
-                        option.value = showtime.film_time;
+                        option.value = String(showtime.id); // Store ID as value
+                        option.dataset.time = showtime.film_time; // Store time as dataset
+                        option.dataset.theatre = showtime.theatre_id; // Store theatre ID as dataset
                         option.textContent = `${showtime.film_time} - ${showtime.available_seats} places`;
-                        option.dataset.showtimeId = showtime.id;
-                        option.dataset.theatreId = showtime.theatre_id;
                         bkTime.appendChild(option);
                     });
                 } else {
+                    console.warn('No showtimes found from API, using fallback');
                     // Fallback to default showtimes
                     const showtimes = movieShowtimes[filmTitle] || [];
                     showtimes.forEach(time => {
@@ -487,7 +509,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    function editBooking(booking) {
+    async function editBooking(booking) {
         // Remplir le formulaire de réservation avec les données actuelles
         bkFilm.value = booking.film_title;
         document.getElementById('bk-count').value = booking.seats;
@@ -495,11 +517,28 @@ document.addEventListener('DOMContentLoaded', function () {
         // Set the date input directly
         bkDate.value = booking.film_date;
 
-        // Populate showtimes based on the film
-        populateShowtimes(booking.film_title);
+        // Populate showtimes based on the film (wait for it to complete)
+        await populateShowtimes(booking.film_title);
 
-        // Set the time value
-        bkTime.value = booking.film_time;
+        // Find and select the correct showtime option by matching the film_time
+        let foundOption = false;
+        for (let i = 0; i < bkTime.options.length; i++) {
+            const option = bkTime.options[i];
+            if (option.dataset.time === booking.film_time) {
+                bkTime.selectedIndex = i;
+                bkTime.value = option.value;
+                foundOption = true;
+
+                // Trigger change event to update hidden fields
+                const event = new Event('change', { bubbles: true });
+                bkTime.dispatchEvent(event);
+                break;
+            }
+        }
+
+        if (!foundOption) {
+            console.warn(`Could not find option for time: ${booking.film_time}`);
+        }
 
         // Stocker l'ID de la réservation en édition
         bookingForm.dataset.editingBookingId = booking.id;
@@ -768,6 +807,21 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
+        // Validate that seats have been selected
+        let selectedSeats = [];
+        if (selectedSeatsJson && selectedSeatsJson !== '[]') {
+            try {
+                selectedSeats = JSON.parse(selectedSeatsJson);
+            } catch (e) {
+                console.error('Error parsing selected seats:', e);
+            }
+        }
+
+        if (selectedSeats.length === 0) {
+            alert('⚠️ Erreur: Vous devez choisir vos places avant de confirmer la réservation');
+            return;
+        }
+
         // Collect seat categories
         const seatCategories = [];
         const categorySelects = document.querySelectorAll('.seat-category-select');
@@ -779,16 +833,6 @@ document.addEventListener('DOMContentLoaded', function () {
             // If no categories selected (shouldn't happen), use default
             for (let i = 0; i < count; i++) {
                 seatCategories.push('adult');
-            }
-        }
-
-        // Parse selected seats
-        let selectedSeats = [];
-        if (selectedSeatsJson && selectedSeatsJson !== '[]') {
-            try {
-                selectedSeats = JSON.parse(selectedSeatsJson);
-            } catch (e) {
-                console.error('Error parsing selected seats:', e);
             }
         }
 
@@ -1186,6 +1230,9 @@ document.addEventListener('DOMContentLoaded', function () {
             currentTheatreId = data.theatre_id;
             selectedSeatsData = [];
 
+            // Store theatre ID in hidden field
+            document.getElementById('bk-theatre-id').value = data.theatre_id;
+
             // Clear previous layout
             seatLayout.innerHTML = '';
 
@@ -1285,11 +1332,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Event listeners for seat selection modal
     chooseSeatsBtn.addEventListener('click', async function() {
-        const showtimeId = document.getElementById('bk-showtime-id').value;
+        // Get selected showtime ID directly from the value
+        const showtimeId = parseInt(bkTime.value);
+
         if (!showtimeId) {
             alert('Veuillez d\'abord sélectionner une séance');
             return;
         }
+
+        console.log('Choose seats button clicked:', {
+            showtimeId: showtimeId,
+            bkTime_value: bkTime.value
+        });
+
+        console.log('Loading seats for showtime:', showtimeId);
         await loadSeatLayout(showtimeId);
     });
 
@@ -1328,11 +1384,30 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Update show/hide of "Choisir mes places" button when showtime is selected
     bkTime.addEventListener('change', function() {
-        const selectedOption = this.options[this.selectedIndex];
-        if (this.value && selectedOption.dataset.showtimeId) {
-            document.getElementById('bk-showtime-id').value = selectedOption.dataset.showtimeId;
-            document.getElementById('bk-theatre-id').value = selectedOption.dataset.theatreId;
+        const showtimeId = this.value;
+
+        console.log('bkTime changed:', {
+            value: showtimeId,
+            selectedOption: this.options[this.selectedIndex]
+        });
+
+        if (showtimeId) {
+            // Show the button
             document.getElementById('seat-selection-button').classList.remove('hidden');
+
+            // Store the showtime ID in the hidden field
+            document.getElementById('bk-showtime-id').value = showtimeId;
+
+            // Find the selected showtime from cache for additional data
+            const selectedOption = this.options[this.selectedIndex];
+            const time = selectedOption.dataset.time;
+            const theatre = selectedOption.dataset.theatre;
+
+            console.log('Showtime selected:', {
+                showtimeId: showtimeId,
+                time: time,
+                theatre: theatre
+            });
         } else {
             document.getElementById('seat-selection-button').classList.add('hidden');
         }

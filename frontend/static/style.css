@@ -472,6 +472,34 @@ main {
     }
 }
 
+/* Prices Actions - Button for My Bookings */
+.prices-actions {
+    margin-top: 40px;
+    text-align: center;
+}
+
+.my-bookings-btn {
+    background: linear-gradient(135deg, #ff8c42 0%, #ffb347 100%);
+    color: white;
+    border: none;
+    padding: 14px 32px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(255, 140, 66, 0.3);
+}
+
+.my-bookings-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(255, 140, 66, 0.5);
+}
+
+.my-bookings-btn:active {
+    transform: translateY(-1px);
+}
+
 .calendar-select option,
 #bk-count option,
 #bk-time option {
@@ -1447,7 +1475,7 @@ main {
 /* Seat Selection Button */
 .seat-selection-button {
     margin-top: 15px;
-    text-align: center;
+    text-align: left;
 }
 
 .btn-accent {
