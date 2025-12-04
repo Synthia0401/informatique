@@ -437,17 +437,21 @@ document.addEventListener('DOMContentLoaded', function () {
         // If we have both film and date, fetch showtimes from backend
         if (filmTitle && selectedDate) {
             try {
-                const response = await fetch(`/api/showtimes?movie=${encodeURIComponent(filmTitle)}&date=${selectedDate}`);
+                const response = await fetch(`/api/showtimes/${selectedDate}`);
                 const data = await response.json();
 
-                if (data.success) {
-                    const showtimes = data.showtimes || [];
+                if (data && data.success) {
+                    const allShowtimes = data.showtimes || [];
+                    // Filter by film title
+                    const showtimes = allShowtimes.filter(s => s.film_title === filmTitle);
 
                     // Add showtimes as options
-                    showtimes.forEach(time => {
+                    showtimes.forEach(showtime => {
                         const option = document.createElement('option');
-                        option.value = time;
-                        option.textContent = time;
+                        option.value = showtime.film_time;
+                        option.textContent = `${showtime.film_time} - ${showtime.available_seats} places`;
+                        option.dataset.showtimeId = showtime.id;
+                        option.dataset.theatreId = showtime.theatre_id;
                         bkTime.appendChild(option);
                     });
                 } else {
@@ -739,6 +743,9 @@ document.addEventListener('DOMContentLoaded', function () {
         const film = bkFilm.value;
         const date = bkDate.value;
         const time = bkTime.value;
+        const showtimeId = document.getElementById('bk-showtime-id').value;
+        const theatreId = document.getElementById('bk-theatre-id').value;
+        const selectedSeatsJson = document.getElementById('bk-selected-seats').value;
 
         // Validation des champs obligatoires
         if (!film || !film.trim()) {
@@ -775,6 +782,16 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
+        // Parse selected seats
+        let selectedSeats = [];
+        if (selectedSeatsJson && selectedSeatsJson !== '[]') {
+            try {
+                selectedSeats = JSON.parse(selectedSeatsJson);
+            } catch (e) {
+                console.error('Error parsing selected seats:', e);
+            }
+        }
+
         const isEditing = bookingForm.dataset.editingBookingId;
         const method = isEditing ? 'PUT' : 'POST';
         const endpoint = isEditing ? `/api/booking/${isEditing}` : '/api/booking';
@@ -788,7 +805,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     film_date: date,
                     film_time: time,
                     seats: count,
-                    seat_categories: seatCategories
+                    seat_categories: seatCategories,
+                    selected_seats: selectedSeats,
+                    showtime_id: showtimeId ? parseInt(showtimeId) : null,
+                    theatre_id: theatreId ? parseInt(theatreId) : null
                 })
             });
 
@@ -1308,8 +1328,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Update show/hide of "Choisir mes places" button when showtime is selected
     bkTime.addEventListener('change', function() {
-        if (this.value) {
-            document.getElementById('bk-showtime-id').value = this.dataset.showtimeId || '';
+        const selectedOption = this.options[this.selectedIndex];
+        if (this.value && selectedOption.dataset.showtimeId) {
+            document.getElementById('bk-showtime-id').value = selectedOption.dataset.showtimeId;
+            document.getElementById('bk-theatre-id').value = selectedOption.dataset.theatreId;
             document.getElementById('seat-selection-button').classList.remove('hidden');
         } else {
             document.getElementById('seat-selection-button').classList.add('hidden');
