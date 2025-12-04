@@ -394,8 +394,9 @@ document.addEventListener('DOMContentLoaded', function () {
                         <div class="booking-header">
                             <h4>${booking.film_title}</h4>
                             <div class="booking-actions">
-                                <button class="booking-btn edit-btn" data-booking-id="${booking.id}" title="Modifier">✏️</button>
-                                <button class="booking-btn delete-btn" data-booking-id="${booking.id}" title="Supprimer">🗑️</button>
+                                <button class="booking-btn edit-btn" data-booking-id="${booking.id}" title="Modifier">Modifier</button>
+                                <button class="booking-btn delete-btn" data-booking-id="${booking.id}" title="Supprimer">Supprimer</button>
+                                <button class="booking-btn payment-btn" data-booking-id="${booking.id}" data-amount="${booking.total_price}" title="Paiement">Paiement</button>
                             </div>
                         </div>
                         <p><strong>Date:</strong> ${booking.film_date}</p>
@@ -404,9 +405,10 @@ document.addEventListener('DOMContentLoaded', function () {
                         <p class="booking-price">Total: ${booking.total_price}€</p>
                     `;
 
-                    // Add event listeners for edit and delete buttons
+                    // Add event listeners for edit, delete and payment buttons
                     const editBtn = bookingEl.querySelector('.edit-btn');
                     const deleteBtn = bookingEl.querySelector('.delete-btn');
+                    const paymentBtn = bookingEl.querySelector('.payment-btn');
 
                     editBtn.addEventListener('click', () => {
                         editBooking(booking);
@@ -414,6 +416,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     deleteBtn.addEventListener('click', () => {
                         deleteBooking(booking.id, bookingEl);
+                    });
+
+                    paymentBtn.addEventListener('click', () => {
+                        processPayment(booking);
                     });
 
                     bookingsList.appendChild(bookingEl);
@@ -580,6 +586,45 @@ document.addEventListener('DOMContentLoaded', function () {
         } catch (error) {
             console.error('Error deleting booking:', error);
             alert('Erreur lors de la suppression');
+        }
+    }
+
+    // ========================================
+    // PAYMENT MANAGEMENT
+    // ========================================
+    async function processPayment(booking) {
+        const amount = booking.total_price;
+        const confirmation = confirm(`Confirmer le paiement de ${amount}€ pour "${booking.film_title}" ?`);
+
+        if (!confirmation) {
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/payment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    booking_id: booking.id,
+                    amount: amount,
+                    film_title: booking.film_title,
+                    film_date: booking.film_date,
+                    film_time: booking.film_time
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                showSuccessNotification(`Paiement de ${amount}€ effectué avec succès !`);
+                // Recharger les réservations
+                await showMyBookings();
+            } else {
+                alert('Erreur: ' + (data.error || 'Le paiement a échoué'));
+            }
+        } catch (error) {
+            console.error('Error processing payment:', error);
+            alert('Erreur lors du traitement du paiement');
         }
     }
 

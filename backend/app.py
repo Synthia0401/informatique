@@ -777,6 +777,51 @@ def delete_booking(booking_id):
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
+@app.route("/api/payment", methods=["POST"])
+def process_payment():
+    if "user_id" not in session:
+        return jsonify({"success": False, "error": "Non authentifié"}), 401
+
+    user_id = session["user_id"]
+    data = request.get_json()
+
+    try:
+        booking_id = data.get("booking_id")
+        amount = data.get("amount")
+
+        if not booking_id or not amount:
+            return jsonify({"success": False, "error": "Données manquantes"}), 400
+
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+
+        # Vérifier que la réservation appartient à l'utilisateur et existe
+        cursor.execute("SELECT id, total_price FROM reservations WHERE id = ? AND user_id = ?", (booking_id, user_id))
+        result = cursor.fetchone()
+
+        if not result:
+            conn.close()
+            return jsonify({"success": False, "error": "Réservation non trouvée ou non autorisée"}), 404
+
+        # Valider le montant
+        if float(amount) != float(result[1]):
+            conn.close()
+            return jsonify({"success": False, "error": "Montant incorrect"}), 400
+
+        # Simuler le paiement réussi
+        # En production, on appellerait un service de paiement (Stripe, PayPal, etc.)
+        conn.close()
+
+        return jsonify({
+            "success": True,
+            "message": f"Paiement de {amount}€ effectué avec succès",
+            "booking_id": booking_id,
+            "amount": amount
+        })
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
 
 @app.route("/api/showtimes/<film_date>", methods=["GET"])
 def get_showtimes_by_date(film_date):
