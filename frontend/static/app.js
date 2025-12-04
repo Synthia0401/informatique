@@ -419,22 +419,62 @@ document.addEventListener('DOMContentLoaded', function () {
     // BOOKING MANAGEMENT - EDIT & DELETE
     // ========================================
 
-    function populateShowtimes(filmTitle) {
+    async function populateShowtimes(filmTitle) {
         // Clear existing options except the first one
         while (bkTime.options.length > 1) {
             bkTime.remove(1);
         }
 
-        // Get showtimes for the selected film
-        const showtimes = movieShowtimes[filmTitle] || [];
+        // Get the selected date
+        const selectedDate = bkDate.value;
 
-        // Add showtimes as options
-        showtimes.forEach(time => {
-            const option = document.createElement('option');
-            option.value = time;
-            option.textContent = time;
-            bkTime.appendChild(option);
-        });
+        // If we have both film and date, fetch showtimes from backend
+        if (filmTitle && selectedDate) {
+            try {
+                const response = await fetch(`/api/showtimes?movie=${encodeURIComponent(filmTitle)}&date=${selectedDate}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    const showtimes = data.showtimes || [];
+
+                    // Add showtimes as options
+                    showtimes.forEach(time => {
+                        const option = document.createElement('option');
+                        option.value = time;
+                        option.textContent = time;
+                        bkTime.appendChild(option);
+                    });
+                } else {
+                    // Fallback to default showtimes
+                    const showtimes = movieShowtimes[filmTitle] || [];
+                    showtimes.forEach(time => {
+                        const option = document.createElement('option');
+                        option.value = time;
+                        option.textContent = time;
+                        bkTime.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error fetching showtimes:', error);
+                // Fallback to default showtimes
+                const showtimes = movieShowtimes[filmTitle] || [];
+                showtimes.forEach(time => {
+                    const option = document.createElement('option');
+                    option.value = time;
+                    option.textContent = time;
+                    bkTime.appendChild(option);
+                });
+            }
+        } else if (filmTitle) {
+            // If no date selected, use default showtimes
+            const showtimes = movieShowtimes[filmTitle] || [];
+            showtimes.forEach(time => {
+                const option = document.createElement('option');
+                option.value = time;
+                option.textContent = time;
+                bkTime.appendChild(option);
+            });
+        }
     }
 
     function editBooking(booking) {

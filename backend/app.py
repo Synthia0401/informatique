@@ -87,6 +87,100 @@ PRICES = {
     "unemployed": 6.5,
 }
 
+# Movie showtimes by weekday (0=Monday to 6=Sunday)
+SHOWTIMES_BY_DAY = {
+    "Inside Out 2": {
+        0: ["14:00", "17:30", "20:45"],      # Monday
+        1: ["14:00", "17:30", "20:45"],      # Tuesday
+        2: ["14:00", "17:30", "20:45"],      # Wednesday
+        3: ["15:00", "18:00", "21:00"],      # Thursday
+        4: ["13:00", "16:00", "19:00", "22:00"],  # Friday
+        5: ["10:00", "13:00", "16:00", "19:00", "22:00"],  # Saturday
+        6: ["10:00", "13:00", "16:00", "19:00"]   # Sunday
+    },
+    "Moana 2": {
+        0: ["13:15", "16:00", "19:00"],
+        1: ["13:15", "16:00", "19:00"],
+        2: ["13:15", "16:00", "19:00"],
+        3: ["14:00", "17:00", "20:00"],
+        4: ["12:00", "15:00", "18:00", "21:00"],
+        5: ["09:00", "12:00", "15:00", "18:00", "21:00"],
+        6: ["09:00", "12:00", "15:00", "18:00"]
+    },
+    "Despicable Me 4": {
+        0: ["15:00", "18:30", "22:00"],
+        1: ["15:00", "18:30", "22:00"],
+        2: ["15:00", "18:30", "22:00"],
+        3: ["14:30", "17:30", "20:30"],
+        4: ["14:00", "17:00", "20:00", "23:00"],
+        5: ["10:30", "13:30", "16:30", "19:30", "22:30"],
+        6: ["10:30", "13:30", "16:30", "19:30"]
+    },
+    "Deadpool & Wolverine": {
+        0: ["12:45", "15:30", "20:15"],
+        1: ["12:45", "15:30", "20:15"],
+        2: ["12:45", "15:30", "20:15"],
+        3: ["13:30", "16:15", "21:00"],
+        4: ["11:30", "14:30", "17:30", "20:30"],
+        5: ["11:00", "14:00", "17:00", "20:00", "23:00"],
+        6: ["11:00", "14:00", "17:00", "20:00"]
+    },
+    "Dune: Part Two": {
+        0: ["16:00", "19:45", "23:00"],
+        1: ["16:00", "19:45", "23:00"],
+        2: ["16:00", "19:45", "23:00"],
+        3: ["16:30", "20:00"],
+        4: ["14:00", "17:30", "21:00"],
+        5: ["13:00", "16:30", "20:00", "23:30"],
+        6: ["13:00", "16:30", "20:00"]
+    },
+    "Wicked": {
+        0: ["11:30", "14:30", "18:00"],
+        1: ["11:30", "14:30", "18:00"],
+        2: ["11:30", "14:30", "18:00"],
+        3: ["12:00", "15:00", "18:30"],
+        4: ["11:00", "14:00", "17:00", "20:00"],
+        5: ["10:00", "13:00", "16:00", "19:00", "22:00"],
+        6: ["10:00", "13:00", "16:00", "19:00"]
+    },
+    "Twisters": {
+        0: ["13:00", "17:00", "21:00"],
+        1: ["13:00", "17:00", "21:00"],
+        2: ["13:00", "17:00", "21:00"],
+        3: ["13:30", "17:30", "20:30"],
+        4: ["12:30", "16:00", "19:30", "23:00"],
+        5: ["10:30", "14:00", "17:30", "21:00"],
+        6: ["10:30", "14:00", "17:30"]
+    },
+    "Furiosa: A Mad Max Saga": {
+        0: ["12:00", "15:00", "18:30"],
+        1: ["12:00", "15:00", "18:30"],
+        2: ["12:00", "15:00", "18:30"],
+        3: ["12:30", "16:00", "19:30"],
+        4: ["11:30", "14:30", "17:30", "20:30"],
+        5: ["10:00", "13:00", "16:00", "19:00", "22:00"],
+        6: ["10:00", "13:00", "16:00", "19:00"]
+    },
+    "Godzilla x Kong: The New Empire": {
+        0: ["17:15", "20:30"],
+        1: ["17:15", "20:30"],
+        2: ["17:15", "20:30"],
+        3: ["17:00", "20:00"],
+        4: ["16:00", "19:00", "22:00"],
+        5: ["14:00", "17:00", "20:00", "23:00"],
+        6: ["14:00", "17:00", "20:00"]
+    },
+    "Kung Fu Panda 4": {
+        0: ["10:45", "14:15", "19:30"],
+        1: ["10:45", "14:15", "19:30"],
+        2: ["10:45", "14:15", "19:30"],
+        3: ["11:00", "14:30", "18:00"],
+        4: ["10:00", "13:30", "17:00", "20:00"],
+        5: ["09:00", "12:30", "15:30", "18:30", "21:30"],
+        6: ["09:00", "12:30", "15:30", "18:30"]
+    }
+}
+
 MOVIES = [
     {
         "id": 1,
@@ -232,6 +326,29 @@ def get_available_dates(days=5):
         })
     return result
 
+# Get showtimes for a movie on a specific date
+def get_showtimes_for_date(movie_title, date_str):
+    """
+    Get showtimes for a specific movie on a specific date.
+    date_str format: "YYYY-MM-DD"
+    """
+    try:
+        # Parse the date to get the weekday (0=Monday, 6=Sunday)
+        date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+        weekday = date_obj.weekday()
+
+        # Get the showtimes for this movie on this weekday
+        if movie_title in SHOWTIMES_BY_DAY:
+            showtimes = SHOWTIMES_BY_DAY[movie_title].get(weekday, [])
+            return showtimes
+        else:
+            # Fallback to default showtimes if not found
+            for movie in MOVIES:
+                if movie['title'] == movie_title:
+                    return movie['showtimes']
+            return []
+    except Exception as e:
+        return []
 
 
 @app.route("/")
@@ -496,6 +613,19 @@ def delete_booking(booking_id):
 
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/showtimes", methods=["GET"])
+def get_showtimes():
+    """Get showtimes for a movie on a specific date"""
+    movie_title = request.args.get('movie')
+    date = request.args.get('date')
+
+    if not movie_title or not date:
+        return jsonify({"success": False, "error": "movie and date parameters required"}), 400
+
+    showtimes = get_showtimes_for_date(movie_title, date)
+    return jsonify({"success": True, "showtimes": showtimes})
 
 
 if __name__ == "__main__":
