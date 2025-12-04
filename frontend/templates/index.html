@@ -217,7 +217,11 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label for="bk-date">Date</label>
-                        <input type="text" id="bk-date" readonly>
+                        <button type="button" id="bk-date-btn" class="date-picker-btn">
+                            <span id="bk-date-display">Sélectionnez une date</span>
+                            <span class="calendar-icon">📅</span>
+                        </button>
+                        <input type="hidden" id="bk-date">
                     </div>
                     <div class="form-group">
                         <label for="bk-time">Séance</label>
@@ -242,6 +246,44 @@
                     <button type="button" class="btn btn-secondary" id="modal-cancel">Annuler</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Date Picker Modal for Booking Form -->
+    <div id="booking-calendar-modal" class="calendar-modal hidden">
+        <div class="calendar-modal-backdrop"></div>
+        <div class="calendar-modal-content">
+            <div class="calendar-header">
+                <button class="calendar-nav-btn" id="bk-calendar-prev-month">‹</button>
+                <div class="calendar-month-year">
+                    <select id="bk-calendar-month" class="calendar-select">
+                        <option value="0">Janvier</option>
+                        <option value="1">Février</option>
+                        <option value="2">Mars</option>
+                        <option value="3">Avril</option>
+                        <option value="4">Mai</option>
+                        <option value="5">Juin</option>
+                        <option value="6">Juillet</option>
+                        <option value="7">Août</option>
+                        <option value="8">Septembre</option>
+                        <option value="9">Octobre</option>
+                        <option value="10">Novembre</option>
+                        <option value="11">Décembre</option>
+                    </select>
+                    <select id="bk-calendar-year" class="calendar-select"></select>
+                </div>
+                <button class="calendar-nav-btn" id="bk-calendar-next-month">›</button>
+            </div>
+            <div class="calendar-weekdays">
+                <div class="weekday">L</div>
+                <div class="weekday">M</div>
+                <div class="weekday">M</div>
+                <div class="weekday">J</div>
+                <div class="weekday">V</div>
+                <div class="weekday">S</div>
+                <div class="weekday">D</div>
+            </div>
+            <div id="bk-calendar-days-container" class="calendar-days-container"></div>
         </div>
     </div>
 
