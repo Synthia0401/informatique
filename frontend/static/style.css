@@ -545,33 +545,7 @@ main {
     color: var(--text-primary);
 }
 
-/* Date Picker Button in Booking Form */
-.date-picker-btn {
-    width: 100%;
-    padding: 12px 16px;
-    background: var(--dark-bg);
-    color: var(--text-primary);
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    font-size: 14px;
-    cursor: pointer;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    transition: all 0.3s ease;
-}
-
-.date-picker-btn:hover {
-    border-color: var(--primary-color);
-    background: rgba(255, 140, 66, 0.05);
-}
-
-.date-picker-btn:focus {
-    outline: none;
-    border-color: var(--secondary-color);
-    box-shadow: 0 0 0 3px rgba(255, 140, 66, 0.1);
-}
-
+/* Calendar icon styling */
 .calendar-icon {
     font-size: 16px;
 }

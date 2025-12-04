@@ -25,21 +25,10 @@ document.addEventListener('DOMContentLoaded', function () {
     const modalCancel = document.getElementById('modal-cancel');
     const bkFilm = document.getElementById('bk-film');
     const bkDate = document.getElementById('bk-date');
-    const bkDateBtn = document.getElementById('bk-date-btn');
-    const bkDateDisplay = document.getElementById('bk-date-display');
     const bkTime = document.getElementById('bk-time');
     const bookingForm = document.getElementById('booking-form');
     const searchInput = document.getElementById('search');
     const movieCards = document.querySelectorAll('.movie-card');
-
-    // Booking Calendar Elements
-    const bookingCalendarModal = document.getElementById('booking-calendar-modal');
-    const bookingCalendarBackdrop = bookingCalendarModal.querySelector('.calendar-modal-backdrop');
-    const bkCalendarMonthSelect = document.getElementById('bk-calendar-month');
-    const bkCalendarYearSelect = document.getElementById('bk-calendar-year');
-    const bkCalendarPrevBtn = document.getElementById('bk-calendar-prev-month');
-    const bkCalendarNextBtn = document.getElementById('bk-calendar-next-month');
-    const bkCalendarDaysContainer = document.getElementById('bk-calendar-days-container');
 
     // ========================================
     // DOM Elements - Authentication
@@ -66,9 +55,6 @@ document.addEventListener('DOMContentLoaded', function () {
     // ========================================
     let selectedDate = null;
     let reservations = [];
-    let bkCurrentDisplayMonth = new Date().getMonth();
-    let bkCurrentDisplayYear = new Date().getFullYear();
-    let bkSelectedDate = null;
 
     // Movie showtimes data - Extracted from backend
     const movieShowtimes = {
@@ -456,8 +442,8 @@ document.addEventListener('DOMContentLoaded', function () {
         bkFilm.value = booking.film_title;
         document.getElementById('bk-count').value = booking.seats;
 
-        // Set the date using the date picker
-        setBkSelectedDate(booking.film_date);
+        // Set the date input directly
+        bkDate.value = booking.film_date;
 
         // Populate showtimes based on the film
         populateShowtimes(booking.film_title);
@@ -738,170 +724,6 @@ document.addEventListener('DOMContentLoaded', function () {
     updateQuickBtns();
 
     // ========================================
-    // BOOKING CALENDAR MANAGEMENT
-    // ========================================
-
-    function initializeBkYearSelect() {
-        const today = new Date();
-        for (let year = today.getFullYear(); year <= today.getFullYear() + 1; year++) {
-            const option = document.createElement('option');
-            option.value = year;
-            option.textContent = year;
-            if (year === today.getFullYear()) option.selected = true;
-            bkCalendarYearSelect.appendChild(option);
-        }
-    }
-
-    function renderBkCalendar() {
-        const firstDay = new Date(bkCurrentDisplayYear, bkCurrentDisplayMonth, 1);
-        const lastDay = new Date(bkCurrentDisplayYear, bkCurrentDisplayMonth + 1, 0);
-        const daysInMonth = lastDay.getDate();
-        const startingDayOfWeek = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
-
-        bkCalendarDaysContainer.innerHTML = '';
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        // Previous month's days
-        const prevMonthLastDay = new Date(bkCurrentDisplayYear, bkCurrentDisplayMonth, 0).getDate();
-        for (let i = startingDayOfWeek - 1; i >= 0; i--) {
-            const dayBtn = document.createElement('button');
-            dayBtn.className = 'calendar-day other-month';
-            dayBtn.textContent = prevMonthLastDay - i;
-            dayBtn.disabled = true;
-            bkCalendarDaysContainer.appendChild(dayBtn);
-        }
-
-        // Current month's days
-        for (let day = 1; day <= daysInMonth; day++) {
-            const dayBtn = document.createElement('button');
-            dayBtn.className = 'calendar-day';
-            dayBtn.textContent = day;
-            dayBtn.type = 'button';
-
-            const currentDate = new Date(bkCurrentDisplayYear, bkCurrentDisplayMonth, day);
-            currentDate.setHours(0, 0, 0, 0);
-
-            // Mark today
-            if (currentDate.getTime() === today.getTime()) {
-                dayBtn.classList.add('today');
-            }
-
-            // Mark selected date
-            if (bkSelectedDate) {
-                const [selYear, selMonth, selDay] = bkSelectedDate.split('-');
-                const dateStr = `${bkCurrentDisplayYear}-${String(bkCurrentDisplayMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                if (dateStr === bkSelectedDate) {
-                    dayBtn.classList.add('active');
-                }
-            }
-
-            // Disable past dates
-            if (currentDate < today) {
-                dayBtn.disabled = true;
-                dayBtn.classList.add('other-month');
-            }
-
-            dayBtn.addEventListener('click', () => {
-                const year = currentDate.getFullYear();
-                const month = String(currentDate.getMonth() + 1).padStart(2, '0');
-                const date = String(currentDate.getDate()).padStart(2, '0');
-                const iso = `${year}-${month}-${date}`;
-                setBkSelectedDate(iso);
-                renderBkCalendar();
-                closeBkCalendarModal();
-            });
-
-            bkCalendarDaysContainer.appendChild(dayBtn);
-        }
-
-        // Next month's days
-        const totalCells = bkCalendarDaysContainer.children.length;
-        const remainingCells = 42 - totalCells;
-        for (let day = 1; day <= remainingCells; day++) {
-            const dayBtn = document.createElement('button');
-            dayBtn.className = 'calendar-day other-month';
-            dayBtn.textContent = day;
-            dayBtn.disabled = true;
-            bkCalendarDaysContainer.appendChild(dayBtn);
-        }
-    }
-
-    function setBkSelectedDate(iso) {
-        bkSelectedDate = iso;
-        const [year, month, day] = iso.split('-');
-        bkDate.value = iso;
-        const dateObj = new Date(year, month - 1, day);
-
-        // Format court: "jeu. 4 déc."
-        const shortText = dateObj.toLocaleDateString('fr-FR', {
-            weekday: 'short',
-            day: 'numeric',
-            month: 'short'
-        });
-        bkDateDisplay.textContent = shortText.charAt(0).toUpperCase() + shortText.slice(1);
-
-        // Mettre à jour les séances quand la date change
-        // Pour l'instant, on affiche les mêmes séances pour toutes les dates
-        // (car les séances ne varient pas par date dans notre app)
-        populateShowtimes(bkFilm.value);
-    }
-
-    function openBkCalendarModal() {
-        bkCurrentDisplayMonth = new Date().getMonth();
-        bkCurrentDisplayYear = new Date().getFullYear();
-        bkCalendarMonthSelect.value = bkCurrentDisplayMonth;
-        bkCalendarYearSelect.value = bkCurrentDisplayYear;
-        renderBkCalendar();
-        bookingCalendarModal.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
-    }
-
-    function closeBkCalendarModal() {
-        bookingCalendarModal.classList.add('hidden');
-        document.body.style.overflow = 'auto';
-    }
-
-    // Booking calendar event listeners
-    bkDateBtn.addEventListener('click', openBkCalendarModal);
-    bookingCalendarBackdrop.addEventListener('click', closeBkCalendarModal);
-
-    bkCalendarMonthSelect.addEventListener('change', function() {
-        bkCurrentDisplayMonth = parseInt(this.value);
-        renderBkCalendar();
-    });
-
-    bkCalendarYearSelect.addEventListener('change', function() {
-        bkCurrentDisplayYear = parseInt(this.value);
-        renderBkCalendar();
-    });
-
-    bkCalendarPrevBtn.addEventListener('click', () => {
-        bkCurrentDisplayMonth--;
-        if (bkCurrentDisplayMonth < 0) {
-            bkCurrentDisplayMonth = 11;
-            bkCurrentDisplayYear--;
-        }
-        bkCalendarMonthSelect.value = bkCurrentDisplayMonth;
-        bkCalendarYearSelect.value = bkCurrentDisplayYear;
-        renderBkCalendar();
-    });
-
-    bkCalendarNextBtn.addEventListener('click', () => {
-        bkCurrentDisplayMonth++;
-        if (bkCurrentDisplayMonth > 11) {
-            bkCurrentDisplayMonth = 0;
-            bkCurrentDisplayYear++;
-        }
-        bkCalendarMonthSelect.value = bkCurrentDisplayMonth;
-        bkCalendarYearSelect.value = bkCurrentDisplayYear;
-        renderBkCalendar();
-    });
-
-    // Initialize booking calendar
-    initializeBkYearSelect();
-
-    // ========================================
     // MODAL MANAGEMENT
     // ========================================
     function openModal(title, date, time) {
@@ -910,16 +732,16 @@ document.addEventListener('DOMContentLoaded', function () {
         // Populate showtimes based on the selected film
         populateShowtimes(title);
 
-        // Set the date
+        // Set the date input
         if (date) {
-            setBkSelectedDate(date);
+            bkDate.value = date;
         } else {
             // Set today as default
             const today = new Date();
             const year = today.getFullYear();
             const month = String(today.getMonth() + 1).padStart(2, '0');
             const day = String(today.getDate()).padStart(2, '0');
-            setBkSelectedDate(`${year}-${month}-${day}`);
+            bkDate.value = `${year}-${month}-${day}`;
         }
 
         // Set the time value if provided
@@ -1040,6 +862,11 @@ document.addEventListener('DOMContentLoaded', function () {
     // Update showtimes when film selection changes
     bkFilm.addEventListener('change', function() {
         populateShowtimes(this.value);
+    });
+
+    // Update showtimes when date changes
+    bkDate.addEventListener('change', function() {
+        populateShowtimes(bkFilm.value);
     });
 
     // ========================================
