@@ -1,10 +1,49 @@
+# Environnement virtuel Python
 venv/
+env/
+ENV/
+.venv
+
+# Fichiers de cache Python
 __pycache__/
 *.py[cod]
-.env
-*.egg-info/
-.idea/
-.vscode/
-dist/
+*$py.class
+*.so
+.Python
 build/
-pip-wheel-metadata/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Base de données SQLite (optionnel - décommenter pour l'inclure en git)
+# backend/cinema.db
+
+# Fichiers IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Fichiers de système
+Thumbs.db
+.DS_Store
+
+# Fichiers d'environnement
+.env
+.env.local
+
+# Logs
+*.log

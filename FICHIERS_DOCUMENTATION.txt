@@ -1,0 +1,193 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║                                                                            ║
+║        CinéMax - PLATEFORME DE RÉSERVATION DE CINÉMA 🎬                   ║
+║                                                                            ║
+║                    INDEX COMPLET DE LA DOCUMENTATION                      ║
+║                                                                            ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+📚 FICHIERS DE DOCUMENTATION DISPONIBLES
+═════════════════════════════════════════════════════════════════════════════
+
+🚀 DÉMARRAGE RAPIDE
+───────────────────────────────────────────────────────────────────────────
+Fichier: QUICK_START.md
+Durée: 1 minute
+Contenu: Les 3 commandes essentielles pour lancer l'appli
+👉 COMMENCEZ PAR CELUI-CI!
+
+
+📖 DOCUMENTATION PRINCIPALE
+───────────────────────────────────────────────────────────────────────────
+Fichier: README.md
+Durée: 15 minutes
+Contenu:
+  - Caractéristiques complètes
+  - Installation détaillée
+  - Utilisation de l'application
+  - Technologies utilisées
+  - Dépannage complet
+  - Structure du projet
+👉 RÉFÉRENCE COMPLÈTE
+
+
+🔧 GUIDES D'INSTALLATION PAR SYSTÈME
+───────────────────────────────────────────────────────────────────────────
+
+Pour Windows:
+Fichier: INSTALLATION_WINDOWS.md
+Durée: 10 minutes
+Contenu:
+  - Double-cliquer sur run.bat (méthode facile)
+  - Installation manuelle avec PowerShell
+  - Dépannage spécifique Windows
+  - Erreurs communes et solutions
+
+Pour macOS:
+Fichier: INSTALLATION_MACOS_LINUX.md
+Durée: 10 minutes
+Contenu:
+  - Exécuter run.sh (méthode facile)
+  - Installation manuelle avec Terminal
+  - Dépannage spécifique macOS
+  - Installation de dépendances
+
+Pour Linux:
+Fichier: INSTALLATION_MACOS_LINUX.md (même fichier que macOS)
+Durée: 10 minutes
+Contenu:
+  - Exécuter run.sh
+  - Installation manuelle
+  - Commandes spécifiques Linux
+
+
+👨‍💻 POUR LES DÉVELOPPEURS
+───────────────────────────────────────────────────────────────────────────
+Fichier: DEVELOPPEMENT.md
+Durée: 20 minutes
+Contenu:
+  - Architecture du projet
+  - Comment modifier le code
+  - Ajouter une fonctionnalité
+  - Tester les modifications
+  - Bonnes pratiques
+  - Sécurité
+👉 GUIDE POUR CONTRIBUER
+
+
+🛠️ COMMANDES UTILES
+───────────────────────────────────────────────────────────────────────────
+
+Windows:
+Fichier: COMMANDES_WINDOWS.ps1
+Contenu:
+  - Commandes PowerShell essentielles
+  - Gestion de l'environnement virtuel
+  - Dépannage et diagnostic
+  - Gestion Git
+  - Nettoyage de fichiers
+
+macOS / Linux:
+Fichier: commandes_macos_linux.sh
+Contenu:
+  - Commandes Bash essentielles
+  - Gestion de l'environnement virtuel
+  - Dépannage et diagnostic
+  - Gestion Git
+  - Nettoyage de fichiers
+
+
+📋 INDEX
+───────────────────────────────────────────────────────────────────────────
+Fichier: INDEX.md
+Contenu:
+  - Vue d'ensemble de toute la documentation
+  - Arborescence du projet
+  - Sélectionneur de documentation
+👉 UTILE POUR S'Y RETROUVER
+
+
+═════════════════════════════════════════════════════════════════════════════
+
+🚀 SCRIPTS DE LANCEMENT
+═════════════════════════════════════════════════════════════════════════════
+
+Windows:
+  → Double-cliquez sur: run.bat
+  → Le script fait tout automatiquement!
+
+macOS / Linux:
+  → Exécutez: chmod +x run.sh && ./run.sh
+  → Le script fait tout automatiquement!
+
+
+═════════════════════════════════════════════════════════════════════════════
+
+⚡ DÉMARRAGE EN 30 SECONDES
+═════════════════════════════════════════════════════════════════════════════
+
+Windows:
+  1. Double-cliquez sur run.bat
+  2. Attendez la fin du chargement
+  3. Ouvrez http://localhost:5000
+
+macOS / Linux:
+  1. Ouvrez le Terminal
+  2. Tapez: cd ~/Informatique && chmod +x run.sh && ./run.sh
+  3. Ouvrez http://localhost:5000
+
+Compte de test:
+  Email: test@cinema.com
+  Mot de passe: test1234
+
+
+═════════════════════════════════════════════════════════════════════════════
+
+📚 TABLEAU RÉCAPITULATIF
+═════════════════════════════════════════════════════════════════════════════
+
+FICHIER                         DURÉE      SITUATION
+─────────────────────────────────────────────────────────────────────────
+QUICK_START.md                  1 min      Je veux juste lancer
+README.md                      15 min      J'ai besoin d'info complète
+INSTALLATION_WINDOWS.md        10 min      Installation sur Windows
+INSTALLATION_MACOS_LINUX.md    10 min      Installation sur Mac/Linux
+DEVELOPPEMENT.md               20 min      Je veux coder
+COMMANDES_WINDOWS.ps1           5 min      Commandes PowerShell
+commandes_macos_linux.sh        5 min      Commandes Bash
+INDEX.md                        5 min      Je me suis perdu
+
+
+═════════════════════════════════════════════════════════════════════════════
+
+💡 CONSEILS DE SÉLECTION
+═════════════════════════════════════════════════════════════════════════════
+
+SI VOUS ÊTES NOUVEAU:
+  → Commencez par QUICK_START.md (1 min)
+  → Puis lancez run.bat ou run.sh
+
+SI VOUS AVEZ DES PROBLÈMES:
+  → Consultez le guide d'installation pour votre système
+  → Lisez la section Dépannage dans README.md
+  → Consultez les commandes correspondantes
+
+SI VOUS VOULEZ DÉVELOPPER:
+  → Lisez DEVELOPPEMENT.md
+  → Explorez le code source
+  → Consultez les commandes utiles
+
+SI VOUS VOUS ÊTES PERDU:
+  → Lisez INDEX.md
+  → Ou consultez ce fichier
+  → Vous trouverez votre réponse!
+
+
+═════════════════════════════════════════════════════════════════════════════
+
+✨ BON DÉVELOPPEMENT! 🚀
+
+Créé avec coeur pour le projet CinéMax
+Dernière mise à jour: Décembre 2024
+
+═════════════════════════════════════════════════════════════════════════════

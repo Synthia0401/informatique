@@ -704,24 +704,121 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // ========================================
-    // SEARCH FUNCTIONALITY
+    // SEARCH FUNCTIONALITY WITH SUGGESTIONS
     // ========================================
+    const searchSuggestions = document.getElementById('search-suggestions');
+
     if (searchInput) {
-        searchInput.addEventListener('input', (e) => {
-            const query = e.target.value.toLowerCase();
+        // Fonction pour filtrer les films par query
+        function filterMovies(query) {
+            if (!query.trim()) {
+                movieCards.forEach((card) => {
+                    card.style.display = '';
+                });
+                searchSuggestions.classList.add('hidden');
+                return;
+            }
+
+            const lowerQuery = query.toLowerCase();
+            const filtered = [];
 
             movieCards.forEach((card) => {
                 const title = card.dataset.title.toLowerCase();
-                if (title.includes(query)) {
+                if (title.startsWith(lowerQuery)) {
                     card.style.display = '';
                     card.classList.add('fade-in');
+                    filtered.push(card);
                 } else {
                     card.style.display = 'none';
                 }
             });
+        }
+
+        // Fonction pour afficher les suggestions
+        function showSuggestions(query) {
+            if (!query.trim()) {
+                searchSuggestions.classList.add('hidden');
+                return;
+            }
+
+            const lowerQuery = query.toLowerCase();
+            const suggestions = [];
+
+            movieCards.forEach((card) => {
+                const title = card.dataset.title;
+                const director = card.querySelector('.movie-director')?.textContent || '';
+                const rating = card.querySelector('.movie-meta')?.textContent || '';
+
+                if (title.toLowerCase().startsWith(lowerQuery)) {
+                    suggestions.push({
+                        title: title,
+                        director: director.replace('<strong>Réalisateur:</strong>', '').trim(),
+                        rating: rating,
+                        card: card
+                    });
+                }
+            });
+
+            // Afficher les suggestions
+            if (suggestions.length > 0) {
+                searchSuggestions.innerHTML = suggestions.map((item, index) => `
+                    <div class="search-suggestion-item" data-index="${index}">
+                        <div class="search-suggestion-icon">🎬</div>
+                        <div class="search-suggestion-info">
+                            <div class="search-suggestion-title">${item.title}</div>
+                            <div class="search-suggestion-detail">${item.director}</div>
+                        </div>
+                        <div class="search-suggestion-rating">${item.rating}</div>
+                    </div>
+                `).join('');
+
+                // Ajouter les event listeners aux suggestions
+                document.querySelectorAll('.search-suggestion-item').forEach((item) => {
+                    item.addEventListener('click', () => {
+                        const suggestionIndex = parseInt(item.dataset.index);
+                        searchInput.value = suggestions[suggestionIndex].title;
+                        searchSuggestions.classList.add('hidden');
+                        filterMovies(suggestions[suggestionIndex].title);
+                        // Scroller vers le film
+                        document.getElementById('movies').scrollIntoView({ behavior: 'smooth' });
+                    });
+
+                    // Hover effect
+                    item.addEventListener('mouseenter', () => {
+                        document.querySelectorAll('.search-suggestion-item').forEach(el => el.classList.remove('active'));
+                        item.classList.add('active');
+                    });
+                });
+
+                searchSuggestions.classList.remove('hidden');
+            } else {
+                searchSuggestions.innerHTML = '<div class="search-no-results">Aucun film trouvé</div>';
+                searchSuggestions.classList.remove('hidden');
+            }
+        }
+
+        // Event listener pour l'input
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value;
+            filterMovies(query);
+            showSuggestions(query);
         });
 
-        // Add fade-in animation
+        // Event listener pour fermer les suggestions au focus
+        searchInput.addEventListener('focus', (e) => {
+            if (e.target.value.trim()) {
+                showSuggestions(e.target.value);
+            }
+        });
+
+        // Fermer les suggestions quand on clique ailleurs
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.nav-search')) {
+                searchSuggestions.classList.add('hidden');
+            }
+        });
+
+        // Ajouter les animations fade-in
         if (!document.getElementById('search-styles')) {
             const style = document.createElement('style');
             style.id = 'search-styles';
