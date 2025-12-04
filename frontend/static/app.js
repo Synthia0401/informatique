@@ -802,22 +802,6 @@ document.addEventListener('DOMContentLoaded', function () {
         delete bookingForm.dataset.editingBookingId;
     }
 
-    // ========================================
-    // TIME BUTTON HANDLING
-    // ========================================
-    timeButtons.forEach((t) => {
-        t.addEventListener('click', (event) => {
-            if (!currentUser) {
-                openAuthModal();
-                return;
-            }
-            const title = t.dataset.title || '';
-            const time = t.dataset.time || '';
-            const date = document.body.dataset.selectedDate || '';
-            openModal(title, date, time);
-            addRippleEffect(t, event);
-        });
-    });
 
     // ========================================
     // RESERVE BUTTON HANDLING
