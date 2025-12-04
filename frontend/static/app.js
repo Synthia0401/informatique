@@ -896,6 +896,27 @@ document.addEventListener('DOMContentLoaded', function () {
         const date = bkDate.value;
         const time = bkTime.value;
 
+        // Validation des champs obligatoires
+        if (!film || !film.trim()) {
+            alert('⚠️ Erreur: Le champ "Film" est obligatoire');
+            return;
+        }
+
+        if (!date || !date.trim()) {
+            alert('⚠️ Erreur: Le champ "Date" est obligatoire');
+            return;
+        }
+
+        if (!time || time === '') {
+            alert('⚠️ Erreur: Le champ "Séance" est obligatoire');
+            return;
+        }
+
+        if (!count || count === '') {
+            alert('⚠️ Erreur: Le champ "Nombre de places" est obligatoire');
+            return;
+        }
+
         const isEditing = bookingForm.dataset.editingBookingId;
         const method = isEditing ? 'PUT' : 'POST';
         const endpoint = isEditing ? `/api/booking/${isEditing}` : '/api/booking';
