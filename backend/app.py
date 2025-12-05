@@ -554,7 +554,7 @@ def get_movies_from_db():
     try:
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
-        cursor.execute("SELECT id, title, director, cast, description, duration, ratings, poster, trailer, color FROM movies ORDER BY id")
+        cursor.execute('SELECT id, title, director, "cast", description, duration, ratings, poster, trailer, color FROM movies ORDER BY id')
         rows = cursor.fetchall()
         conn.close()
 
@@ -1068,6 +1068,7 @@ def add_movie():
         return jsonify({"success": False, "error": "La durée doit être un nombre"}), 400
 
     try:
+        print(f"[ADD MOVIE] Attempting to add: {title} by {director}")
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
 
@@ -1077,6 +1078,7 @@ def add_movie():
         )
         conn.commit()
         movie_id = cursor.lastrowid
+        print(f"[ADD MOVIE] Successfully inserted movie with ID: {movie_id}")
         conn.close()
 
         return jsonify({
@@ -1095,9 +1097,11 @@ def add_movie():
                 "color": color
             }
         })
-    except sqlite3.IntegrityError:
+    except sqlite3.IntegrityError as e:
+        print(f"[ADD MOVIE] IntegrityError: {e}")
         return jsonify({"success": False, "error": f"Le film '{title}' existe déjà"}), 400
     except Exception as e:
+        print(f"[ADD MOVIE] Exception: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
 
