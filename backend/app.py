@@ -31,6 +31,7 @@ def init_db():
                 sexe TEXT,
                 ville TEXT,
                 habitation TEXT,
+                is_admin INTEGER DEFAULT 0,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ''')
@@ -97,6 +98,23 @@ def init_db():
             )
         ''')
 
+        # Table des films
+        cursor.execute('''
+            CREATE TABLE movies (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT UNIQUE NOT NULL,
+                director TEXT NOT NULL,
+                cast TEXT NOT NULL,
+                description TEXT NOT NULL,
+                duration INTEGER NOT NULL,
+                ratings TEXT NOT NULL,
+                poster TEXT NOT NULL,
+                trailer TEXT,
+                color TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+
         conn.commit()
         conn.close()
 
@@ -104,7 +122,7 @@ init_db()
 
 # Create test user account
 def create_test_user():
-    """Create a test user for demonstration"""
+    """Create a test user and admin user for demonstration"""
     try:
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
@@ -114,15 +132,42 @@ def create_test_user():
         if cursor.fetchone() is None:
             hashed_password = generate_password_hash("test1234")
             cursor.execute(
-                "INSERT INTO users (email, password, nom, prenom, sexe, ville, habitation) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                ("test@cinema.com", hashed_password, "Test", "User", "M", "Paris", "123 Rue de la Paix")
+                "INSERT INTO users (email, password, nom, prenom, sexe, ville, habitation, is_admin) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                ("test@cinema.com", hashed_password, "Test", "User", "M", "Paris", "123 Rue de la Paix", 0)
             )
             conn.commit()
+
+        # Create admin user
+        cursor.execute("SELECT id FROM users WHERE email = ?", ("admin@cinema.com",))
+        if cursor.fetchone() is None:
+            hashed_password = generate_password_hash("admin1234")
+            cursor.execute(
+                "INSERT INTO users (email, password, nom, prenom, sexe, ville, habitation, is_admin) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                ("admin@cinema.com", hashed_password, "Admin", "User", "M", "Paris", "123 Rue de la Paix", 1)
+            )
+            conn.commit()
+
         conn.close()
     except Exception as e:
         pass
 
 create_test_user()
+
+# Initialize movies in database
+def init_movies():
+    """Initialize movies in the database from MOVIES constant"""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+
+        # Check if movies table has data
+        cursor.execute("SELECT COUNT(*) FROM movies")
+        if cursor.fetchone()[0] == 0:
+            # Movies will be inserted after MOVIES constant is defined
+            pass
+        conn.close()
+    except Exception as e:
+        print(f"Error initializing movies: {e}")
 
 # Create test theatres and showtimes
 def create_test_data():
@@ -435,6 +480,38 @@ MOVIES = [
     },
 ]
 
+# Insert initial movies into database
+def populate_movies_db():
+    """Insert MOVIES data into the movies table"""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+
+        # Check if movies table already has data
+        cursor.execute("SELECT COUNT(*) FROM movies")
+        if cursor.fetchone()[0] == 0:
+            for movie in MOVIES:
+                cursor.execute(
+                    "INSERT OR IGNORE INTO movies (title, director, cast, description, duration, ratings, poster, trailer, color) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    (
+                        movie['title'],
+                        movie['director'],
+                        movie['cast'],
+                        movie['description'],
+                        movie['duration'],
+                        movie['ratings'],
+                        movie['poster'],
+                        movie.get('trailer'),
+                        movie.get('color')
+                    )
+                )
+            conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"Error populating movies: {e}")
+
+populate_movies_db()
+
 # Prepare a few dates for which the cinema proposes séances (today + 4 jours)
 def get_available_dates(days=5):
     today = datetime.now()
@@ -472,11 +549,41 @@ def get_showtimes_for_date(movie_title, date_str):
         return []
 
 
+def get_movies_from_db():
+    """Fetch all movies from database"""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, title, director, cast, description, duration, ratings, poster, trailer, color FROM movies ORDER BY id")
+        rows = cursor.fetchall()
+        conn.close()
+
+        movies = []
+        for row in rows:
+            movies.append({
+                "id": row[0],
+                "title": row[1],
+                "director": row[2],
+                "cast": row[3],
+                "description": row[4],
+                "duration": row[5],
+                "ratings": row[6],
+                "poster": row[7],
+                "trailer": row[8],
+                "color": row[9],
+                "showtimes": []
+            })
+        return movies
+    except Exception as e:
+        print(f"Error fetching movies: {e}")
+        return MOVIES
+
 @app.route("/")
 def home():
+    movies = get_movies_from_db()
     return render_template(
         "index.html",
-        movies=MOVIES,
+        movies=movies,
         prices=PRICES,
         current_year=datetime.now().year,
         available_dates=get_available_dates(5),
@@ -950,17 +1057,33 @@ def add_movie():
     ratings = data.get("ratings")
     poster = data.get("poster")
     trailer = data.get("trailer")
+    color = data.get("color")
 
     if not all([title, director, cast, description, duration, ratings, poster]):
         return jsonify({"success": False, "error": "Tous les champs sont requis"}), 400
 
     try:
-        # In a real app, you'd store movies in database
-        # For now, we'll just return success
+        duration = int(duration)
+    except (ValueError, TypeError):
+        return jsonify({"success": False, "error": "La durée doit être un nombre"}), 400
+
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "INSERT INTO movies (title, director, cast, description, duration, ratings, poster, trailer, color) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (title, director, cast, description, duration, ratings, poster, trailer, color)
+        )
+        conn.commit()
+        movie_id = cursor.lastrowid
+        conn.close()
+
         return jsonify({
             "success": True,
             "message": f"Film '{title}' ajouté avec succès",
             "movie": {
+                "id": movie_id,
                 "title": title,
                 "director": director,
                 "cast": cast,
@@ -968,11 +1091,21 @@ def add_movie():
                 "duration": duration,
                 "ratings": ratings,
                 "poster": poster,
-                "trailer": trailer
+                "trailer": trailer,
+                "color": color
             }
         })
+    except sqlite3.IntegrityError:
+        return jsonify({"success": False, "error": f"Le film '{title}' existe déjà"}), 400
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/movies", methods=["GET"])
+def get_all_movies():
+    """Get all movies from database"""
+    movies = get_movies_from_db()
+    return jsonify({"success": True, "movies": movies})
 
 
 @app.route("/api/admin/showtime", methods=["POST"])

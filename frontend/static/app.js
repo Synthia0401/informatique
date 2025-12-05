@@ -1491,7 +1491,37 @@ document.addEventListener('DOMContentLoaded', function () {
     // ADMIN PANEL
     // ========================================
     const adminModal = document.getElementById('admin-modal');
+    const addFilmForm = document.getElementById('add-film-form');
     const addShowtimeForm = document.getElementById('add-showtime-form');
+
+    // Admin tab functionality
+    const adminTabBtns = document.querySelectorAll('.admin-tab-btn');
+    const adminTabContents = document.querySelectorAll('.admin-tab-content');
+
+    adminTabBtns.forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const tabName = btn.getAttribute('data-tab');
+
+            // Hide all tabs
+            adminTabContents.forEach((content) => {
+                content.classList.add('hidden');
+                content.classList.remove('active');
+            });
+
+            // Remove active class from all buttons
+            adminTabBtns.forEach((b) => {
+                b.classList.remove('active');
+            });
+
+            // Show selected tab
+            const selectedTab = document.getElementById(`${tabName}-tab`);
+            if (selectedTab) {
+                selectedTab.classList.remove('hidden');
+                selectedTab.classList.add('active');
+            }
+            btn.classList.add('active');
+        });
+    });
 
     // Admin hero buttons
     const addFilmBtnHero = document.getElementById('add-film-btn-hero');
@@ -1525,6 +1555,67 @@ document.addEventListener('DOMContentLoaded', function () {
             adminModal.classList.add('hidden');
             adminModal.setAttribute('aria-hidden', 'true');
             document.body.style.overflow = 'auto';
+        });
+    }
+
+    // Handle add film form submission
+    if (addFilmForm) {
+        addFilmForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const title = document.getElementById('film-title').value;
+            const director = document.getElementById('film-director').value;
+            const cast = document.getElementById('film-cast').value;
+            const description = document.getElementById('film-description').value;
+            const duration = document.getElementById('film-duration').value;
+            const ratings = document.getElementById('film-ratings').value;
+            const poster = document.getElementById('film-poster').value;
+            const trailer = document.getElementById('film-trailer').value;
+            const errorEl = document.getElementById('admin-film-error');
+
+            if (!title || !director || !cast || !description || !duration || !ratings || !poster) {
+                errorEl.textContent = 'Tous les champs obligatoires doivent être remplis';
+                errorEl.classList.remove('hidden');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/admin/movie', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title,
+                        director,
+                        cast,
+                        description,
+                        duration: parseInt(duration),
+                        ratings,
+                        poster,
+                        trailer,
+                        color: null
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showSuccessNotification(`Film '${title}' ajouté avec succès!`);
+                    addFilmForm.reset();
+                    errorEl.classList.add('hidden');
+
+                    // Refresh movies list
+                    setTimeout(() => {
+                        location.reload();
+                    }, 500);
+                } else {
+                    errorEl.textContent = data.error || 'Erreur lors de l\'ajout du film';
+                    errorEl.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Error adding film:', error);
+                errorEl.textContent = 'Erreur lors de la connexion au serveur';
+                errorEl.classList.remove('hidden');
+            }
         });
     }
 

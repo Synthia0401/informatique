@@ -321,11 +321,60 @@
             <h2 class="modal-title">Panneau Admin</h2>
 
             <div class="admin-tabs">
-                <button class="admin-tab-btn active" data-tab="add-showtime">Ajouter une séance</button>
+                <button class="admin-tab-btn active" data-tab="add-film">Ajouter un film</button>
+                <button class="admin-tab-btn" data-tab="add-showtime">Ajouter une séance</button>
+            </div>
+
+            <!-- Add Film Form -->
+            <div id="add-film-tab" class="admin-tab-content active">
+                <form id="add-film-form" class="booking-form">
+                    <div class="form-group">
+                        <label for="film-title">Titre</label>
+                        <input type="text" id="film-title" placeholder="Titre du film" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="film-director">Réalisateur</label>
+                        <input type="text" id="film-director" placeholder="Nom du réalisateur" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="film-cast">Acteurs</label>
+                        <input type="text" id="film-cast" placeholder="Acteurs (séparés par des virgules)" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="film-description">Description</label>
+                        <textarea id="film-description" placeholder="Description du film" required rows="3"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="film-duration">Durée (minutes)</label>
+                            <input type="number" id="film-duration" placeholder="90" min="1" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="film-ratings">Classification</label>
+                            <select id="film-ratings" required>
+                                <option value="">Sélectionnez</option>
+                                <option value="Tous publics">Tous publics</option>
+                                <option value="12+">12+</option>
+                                <option value="16+">16+</option>
+                                <option value="18+">18+</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="film-poster">URL de l'affiche</label>
+                        <input type="url" id="film-poster" placeholder="https://..." required>
+                    </div>
+                    <div class="form-group">
+                        <label for="film-trailer">URL de la bande-annonce (optionnel)</label>
+                        <input type="url" id="film-trailer" placeholder="https://...">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Ajouter le film</button>
+                    <div id="admin-film-error" class="error-message hidden"></div>
+                </form>
             </div>
 
             <!-- Add Showtime Form -->
-            <div id="add-showtime-tab" class="admin-tab-content active">
+            <div id="add-showtime-tab" class="admin-tab-content hidden">
                 <form id="add-showtime-form" class="booking-form">
                     <div class="form-group">
                         <label for="admin-film">Film</label>
