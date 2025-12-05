@@ -114,6 +114,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+
     function updateUIForLoggedIn() {
         accountLoggedOut.classList.add('hidden');
         accountLoggedIn.classList.remove('hidden');
@@ -1461,6 +1462,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Check user authentication status on page load
     checkUserStatus();
+
+    // Initialize admin button visibility
+    setTimeout(() => {
+        updateAdminButton();
+    }, 100);
 
     // ========================================
     // APPLY GRADIENT BACKGROUNDS TO POSTERS
