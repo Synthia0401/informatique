@@ -1159,9 +1159,25 @@ def add_showtime():
     if not all([film_title, film_date, film_time, theatre_id]):
         return jsonify({"success": False, "error": "Tous les champs sont requis"}), 400
 
+    # Validate theatre_id is a number
+    try:
+        theatre_id = int(theatre_id)
+    except (ValueError, TypeError):
+        return jsonify({"success": False, "error": "La salle doit être un nombre valide"}), 400
+
+    if theatre_id < 1 or theatre_id > 10:
+        return jsonify({"success": False, "error": "La salle doit être entre 1 et 10"}), 400
+
     try:
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
+
+        # Check if the film exists
+        cursor.execute("SELECT id, title FROM movies WHERE title = ?", (film_title,))
+        movie = cursor.fetchone()
+        if not movie:
+            conn.close()
+            return jsonify({"success": False, "error": f"Le film '{film_title}' n'existe pas"}), 400
 
         # Check if a showtime already exists for this film, date, time, and theatre
         cursor.execute(
@@ -1171,14 +1187,7 @@ def add_showtime():
         existing_showtime = cursor.fetchone()
         if existing_showtime:
             conn.close()
-            return jsonify({"success": False, "error": "Une séance existe déjà pour ce film à cette date et cette heure"}), 400
-
-        # Check if the film exists
-        cursor.execute("SELECT id, title FROM movies WHERE title = ?", (film_title,))
-        movie = cursor.fetchone()
-        if not movie:
-            conn.close()
-            return jsonify({"success": False, "error": f"Le film '{film_title}' n'existe pas"}), 400
+            return jsonify({"success": False, "error": "Une séance existe déjà pour ce film à cette date et cette heure dans cette salle"}), 400
 
         # Insert the new showtime
         cursor.execute(
@@ -1188,6 +1197,8 @@ def add_showtime():
         conn.commit()
         showtime_id = cursor.lastrowid
         conn.close()
+
+        print(f"[ADD SHOWTIME] Successfully created showtime ID {showtime_id}: {film_title} - {film_date} at {film_time} (Theatre {theatre_id})")
 
         return jsonify({
             "success": True,
@@ -1201,8 +1212,12 @@ def add_showtime():
                 "available_seats": 96
             }
         })
+    except sqlite3.DatabaseError as e:
+        print(f"[ADD SHOWTIME] Database error: {e}")
+        return jsonify({"success": False, "error": "Erreur de base de données - la séance n'a pas pu être ajoutée"}), 500
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        print(f"[ADD SHOWTIME] Unexpected error: {e}")
+        return jsonify({"success": False, "error": "Erreur lors de l'ajout de la séance"}), 500
 
 
 if __name__ == "__main__":

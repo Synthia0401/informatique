@@ -1540,6 +1540,25 @@ document.addEventListener('DOMContentLoaded', function () {
             adminModal.classList.remove('hidden');
             adminModal.setAttribute('aria-hidden', 'false');
             document.body.style.overflow = 'hidden';
+
+            // Activate the "add-showtime" tab
+            const showtimeTabBtn = document.querySelector('[data-tab="add-showtime"]');
+            const showtimeTabContent = document.getElementById('add-showtime-tab');
+            if (showtimeTabBtn && showtimeTabContent) {
+                // Hide all tabs
+                adminTabContents.forEach((content) => {
+                    content.classList.add('hidden');
+                    content.classList.remove('active');
+                });
+                // Remove active class from all buttons
+                adminTabBtns.forEach((b) => {
+                    b.classList.remove('active');
+                });
+                // Show the showtime tab
+                showtimeTabContent.classList.remove('hidden');
+                showtimeTabContent.classList.add('active');
+                showtimeTabBtn.classList.add('active');
+            }
         });
     }
 
