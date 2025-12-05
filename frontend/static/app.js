@@ -1476,11 +1476,6 @@ document.addEventListener('DOMContentLoaded', function () {
     // Check user authentication status on page load
     checkUserStatus();
 
-    // Initialize admin button visibility
-    setTimeout(() => {
-        updateAdminButton();
-    }, 100);
-
     // ========================================
     // APPLY GRADIENT BACKGROUNDS TO POSTERS
     // ========================================
@@ -1495,27 +1490,8 @@ document.addEventListener('DOMContentLoaded', function () {
     // ========================================
     // ADMIN PANEL
     // ========================================
-    const adminBtn = document.getElementById('admin-btn');
     const adminModal = document.getElementById('admin-modal');
     const addShowtimeForm = document.getElementById('add-showtime-form');
-
-    // Show/hide admin button based on user role
-    function updateAdminButton() {
-        if (currentUser && currentUser.is_admin) {
-            adminBtn.classList.remove('hidden');
-        } else {
-            adminBtn.classList.add('hidden');
-        }
-    }
-
-    // Open admin modal
-    if (adminBtn) {
-        adminBtn.addEventListener('click', () => {
-            adminModal.classList.remove('hidden');
-            adminModal.setAttribute('aria-hidden', 'false');
-            document.body.style.overflow = 'hidden';
-        });
-    }
 
     // Admin hero buttons
     const addFilmBtnHero = document.getElementById('add-film-btn-hero');
@@ -1604,18 +1580,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Update admin button visibility when user status changes
-    const originalUpdateUIForLoggedIn = updateUIForLoggedIn;
-    updateUIForLoggedIn = function() {
-        originalUpdateUIForLoggedIn.call(this);
-        updateAdminButton();
-    };
-
-    const originalUpdateUIForLoggedOut = updateUIForLoggedOut;
-    updateUIForLoggedOut = function() {
-        originalUpdateUIForLoggedOut.call(this);
-        updateAdminButton();
-    };
 
     // ========================================
     // CONSOLE MESSAGE
