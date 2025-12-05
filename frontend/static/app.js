@@ -1603,8 +1603,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     addFilmForm.reset();
                     errorEl.classList.add('hidden');
 
-                    // Refresh movies list
+                    // Close modal and refresh movies list
                     setTimeout(() => {
+                        adminModal.classList.add('hidden');
+                        adminModal.setAttribute('aria-hidden', 'true');
+                        document.body.style.overflow = 'auto';
                         location.reload();
                     }, 500);
                 } else {
