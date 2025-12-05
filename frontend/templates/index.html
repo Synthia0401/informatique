@@ -378,7 +378,9 @@
                 <form id="add-showtime-form" class="booking-form">
                     <div class="form-group">
                         <label for="admin-film">Film</label>
-                        <input type="text" id="admin-film" placeholder="Titre du film" required>
+                        <select id="admin-film" required>
+                            <option value="">Sélectionnez un film</option>
+                        </select>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
@@ -406,6 +408,7 @@
                             <option value="10">Salle 10</option>
                         </select>
                     </div>
+                    <div id="admin-showtimes-list" class="showtimes-list" style="margin-top: 20px;"></div>
                     <button type="submit" class="btn btn-primary">Ajouter la séance</button>
                     <div id="admin-showtime-error" class="error-message hidden"></div>
                 </form>

@@ -1677,6 +1677,66 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Handle add showtime form submission
+    // Load movies into admin film select
+    async function populateAdminFilmSelect() {
+        try {
+            const response = await fetch('/api/movies');
+            const data = await response.json();
+            if (data.success && data.movies) {
+                const filmSelect = document.getElementById('admin-film');
+                filmSelect.innerHTML = '<option value="">Sélectionnez un film</option>';
+                data.movies.forEach(movie => {
+                    const option = document.createElement('option');
+                    option.value = movie.title;
+                    option.textContent = movie.title;
+                    filmSelect.appendChild(option);
+                });
+            }
+        } catch (error) {
+            console.error('Error loading films:', error);
+        }
+    }
+
+    // Display showtimes for selected film
+    async function displayFilmShowtimes(filmTitle) {
+        const showtimesListEl = document.getElementById('admin-showtimes-list');
+        if (!filmTitle) {
+            showtimesListEl.innerHTML = '';
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/showtimes/${encodeURIComponent(filmTitle)}`);
+            const data = await response.json();
+
+            if (data.success && data.showtimes && data.showtimes.length > 0) {
+                let html = '<h4 style="margin-bottom: 10px;">Séances existantes:</h4><ul style="list-style: none; padding: 0;">';
+                data.showtimes.forEach(showtime => {
+                    const theatreNum = showtime.theatre_id;
+                    html += `<li style="padding: 5px 0; border-bottom: 1px solid #eee;">📅 ${showtime.film_date} à ${showtime.film_time} - Salle ${theatreNum} (${showtime.available_seats} places)</li>`;
+                });
+                html += '</ul>';
+                showtimesListEl.innerHTML = html;
+            } else {
+                showtimesListEl.innerHTML = '<p style="color: #999;">Aucune séance pour ce film</p>';
+            }
+        } catch (error) {
+            console.error('Error loading showtimes:', error);
+            showtimesListEl.innerHTML = '';
+        }
+    }
+
+    // Film selection change handler
+    const adminFilmSelect = document.getElementById('admin-film');
+    if (adminFilmSelect) {
+        adminFilmSelect.addEventListener('change', (e) => {
+            displayFilmShowtimes(e.target.value);
+        });
+    }
+
+    // Populate films on page load
+    populateAdminFilmSelect();
+
     if (addShowtimeForm) {
         addShowtimeForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -1711,6 +1771,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     showSuccessNotification('Séance ajoutée avec succès!');
                     addShowtimeForm.reset();
                     errorEl.classList.add('hidden');
+                    // Refresh the showtimes list
+                    displayFilmShowtimes(filmTitle);
                     setTimeout(() => {
                         adminModal.classList.add('hidden');
                         adminModal.setAttribute('aria-hidden', 'true');

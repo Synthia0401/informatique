@@ -1112,6 +1112,36 @@ def get_all_movies():
     return jsonify({"success": True, "movies": movies})
 
 
+@app.route("/api/showtimes/<film_title>", methods=["GET"])
+def get_movie_showtimes(film_title):
+    """Get all showtimes for a specific movie"""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "SELECT id, film_title, film_date, film_time, theatre_id, available_seats FROM showtimes WHERE film_title = ? ORDER BY film_date, film_time",
+            (film_title,)
+        )
+        rows = cursor.fetchall()
+        conn.close()
+
+        showtimes = []
+        for row in rows:
+            showtimes.append({
+                "id": row[0],
+                "film_title": row[1],
+                "film_date": row[2],
+                "film_time": row[3],
+                "theatre_id": row[4],
+                "available_seats": row[5]
+            })
+
+        return jsonify({"success": True, "showtimes": showtimes})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
 @app.route("/api/admin/showtime", methods=["POST"])
 def add_showtime():
     if "user_id" not in session:
@@ -1133,6 +1163,24 @@ def add_showtime():
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
 
+        # Check if a showtime already exists for this film, date, time, and theatre
+        cursor.execute(
+            "SELECT id FROM showtimes WHERE film_title = ? AND film_date = ? AND film_time = ? AND theatre_id = ?",
+            (film_title, film_date, film_time, theatre_id)
+        )
+        existing_showtime = cursor.fetchone()
+        if existing_showtime:
+            conn.close()
+            return jsonify({"success": False, "error": "Une séance existe déjà pour ce film à cette date et cette heure"}), 400
+
+        # Check if the film exists
+        cursor.execute("SELECT id, title FROM movies WHERE title = ?", (film_title,))
+        movie = cursor.fetchone()
+        if not movie:
+            conn.close()
+            return jsonify({"success": False, "error": f"Le film '{film_title}' n'existe pas"}), 400
+
+        # Insert the new showtime
         cursor.execute(
             "INSERT INTO showtimes (film_title, film_date, film_time, theatre_id, available_seats) VALUES (?, ?, ?, ?, ?)",
             (film_title, film_date, film_time, theatre_id, 96)
