@@ -1657,11 +1657,12 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
                     }
 
-                    // Close modal
+                    // Close modal and reload page to show new film for all users
                     setTimeout(() => {
                         adminModal.classList.add('hidden');
                         adminModal.setAttribute('aria-hidden', 'true');
                         document.body.style.overflow = 'auto';
+                        location.reload();
                     }, 500);
                 } else {
                     errorEl.textContent = data.error || 'Erreur lors de l\'ajout du film';
