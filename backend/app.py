@@ -1,9 +1,16 @@
-from flask import Flask, render_template, url_for, request, jsonify, session
+from flask import Flask, render_template, url_for, request, jsonify, session, send_file
 from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
 import os
 import json
+import qrcode
+from io import BytesIO
+from reportlab.lib.pagesizes import letter
+from reportlab.lib import colors
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
 
 app = Flask(
     __name__,
@@ -780,7 +787,7 @@ def my_bookings():
         cursor = conn.cursor()
 
         cursor.execute(
-            "SELECT id, film_title, film_date, film_time, seats, total_price, created_at FROM reservations WHERE user_id = ? ORDER BY created_at DESC",
+            "SELECT id, film_title, film_date, film_time, seats, total_price, created_at, status FROM reservations WHERE user_id = ? ORDER BY created_at DESC",
             (session["user_id"],)
         )
         bookings = cursor.fetchall()
@@ -808,6 +815,7 @@ def my_bookings():
                 "seats": b[4],
                 "total_price": b[5],
                 "created_at": b[6],
+                "status": b[7],
                 "selected_seats": selected_seats
             })
 
@@ -935,6 +943,12 @@ def process_payment():
 
         # Simuler le paiement réussi
         # En production, on appellerait un service de paiement (Stripe, PayPal, etc.)
+        # Mettre à jour le statut de la réservation à "confirmed"
+        cursor.execute(
+            "UPDATE reservations SET status = ? WHERE id = ?",
+            ("confirmed", booking_id)
+        )
+        conn.commit()
         conn.close()
 
         return jsonify({
@@ -943,6 +957,118 @@ def process_payment():
             "booking_id": booking_id,
             "amount": amount
         })
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/booking/<int:booking_id>/pdf", methods=["GET"])
+def generate_booking_pdf(booking_id):
+    """Generate a PDF with reservation details and QR code"""
+    if "user_id" not in session:
+        return jsonify({"success": False, "error": "Non authentifié"}), 401
+
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+
+        # Fetch booking details
+        cursor.execute(
+            "SELECT id, film_title, film_date, film_time, seats, total_price, created_at FROM reservations WHERE id = ? AND user_id = ?",
+            (booking_id, session["user_id"])
+        )
+        booking = cursor.fetchone()
+
+        if not booking:
+            conn.close()
+            return jsonify({"success": False, "error": "Réservation non trouvée"}), 404
+
+        # Get selected seats
+        cursor.execute(
+            "SELECT row_letter, seat_number FROM seat_bookings WHERE reservation_id = ? ORDER BY row_letter, seat_number",
+            (booking_id,)
+        )
+        seats_data = cursor.fetchall()
+        seats_str = ", ".join([f"{seat[0]}{seat[1]}" for seat in seats_data])
+
+        conn.close()
+
+        # Create QR code with booking information
+        qr_data = f"Booking ID: {booking[0]}\nFilm: {booking[1]}\nDate: {booking[2]}\nTime: {booking[3]}\nPrice: {booking[5]}€"
+        qr = qrcode.QRCode(version=1, box_size=5, border=2)
+        qr.add_data(qr_data)
+        qr.make(fit=True)
+        qr_img = qr.make_image(fill_color="black", back_color="white")
+
+        # Save QR code to BytesIO
+        qr_buffer = BytesIO()
+        qr_img.save(qr_buffer, format='PNG')
+        qr_buffer.seek(0)
+
+        # Create PDF
+        pdf_buffer = BytesIO()
+        doc = SimpleDocTemplate(pdf_buffer, pagesize=letter, topMargin=0.5*inch, bottomMargin=0.5*inch)
+
+        # Define styles
+        styles = getSampleStyleSheet()
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=20,
+            textColor=colors.HexColor('#ff6b4a'),
+            spaceAfter=20,
+            alignment=1  # Center alignment
+        )
+
+        # Build PDF content
+        story = []
+
+        # Title
+        story.append(Paragraph("CinéMax - Confirmation de Réservation", title_style))
+        story.append(Spacer(1, 0.2*inch))
+
+        # Booking details table
+        data = [
+            ["Numéro de réservation:", f"#{booking[0]}"],
+            ["Film:", booking[1]],
+            ["Date:", booking[2]],
+            ["Heure:", booking[3]],
+            ["Nombre de places:", str(booking[4])],
+            ["Places:", seats_str],
+            ["Montant total:", f"{booking[5]}€"],
+        ]
+
+        table = Table(data, colWidths=[2.5*inch, 2.5*inch])
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#ffe0d3')),
+            ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 11),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#8b3a3a')),
+        ]))
+
+        story.append(table)
+        story.append(Spacer(1, 0.3*inch))
+
+        # QR Code
+        story.append(Paragraph("Code de vérification:", styles['Heading2']))
+        story.append(Spacer(1, 0.1*inch))
+        qr_image = Image(qr_buffer, width=2*inch, height=2*inch)
+        story.append(qr_image)
+
+        # Build PDF
+        doc.build(story)
+        pdf_buffer.seek(0)
+
+        return send_file(
+            pdf_buffer,
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name=f'reservation_{booking_id}.pdf'
+        )
 
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500

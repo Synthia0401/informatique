@@ -404,37 +404,56 @@ document.addEventListener('DOMContentLoaded', function () {
                 data.bookings.forEach((booking) => {
                     const bookingEl = document.createElement('div');
                     bookingEl.className = 'booking-item';
+                    const isConfirmed = booking.status === 'confirmed';
+                    const statusBadge = isConfirmed ? '<span class="status-badge confirmed">Confirmée</span>' : '';
+
                     bookingEl.innerHTML = `
                         <div class="booking-header">
                             <h4>${booking.film_title}</h4>
-                            <div class="booking-actions">
-                                <button class="booking-btn edit-btn" data-booking-id="${booking.id}" title="Modifier">Modifier</button>
-                                <button class="booking-btn delete-btn" data-booking-id="${booking.id}" title="Supprimer">Supprimer</button>
-                                <button class="booking-btn payment-btn" data-booking-id="${booking.id}" data-amount="${booking.total_price}" title="Paiement">Paiement</button>
-                            </div>
+                            ${statusBadge}
                         </div>
                         <p><strong>Date:</strong> ${booking.film_date}</p>
                         <p><strong>Heure:</strong> ${booking.film_time}</p>
                         <p><strong>Places:</strong> ${booking.seats}</p>
                         <p class="booking-price">Total: ${booking.total_price}€</p>
+                        <div class="booking-actions">
+                            ${!isConfirmed ? `
+                                <button class="booking-btn edit-btn" data-booking-id="${booking.id}" title="Modifier">Modifier</button>
+                                <button class="booking-btn delete-btn" data-booking-id="${booking.id}" title="Supprimer">Supprimer</button>
+                                <button class="booking-btn payment-btn" data-booking-id="${booking.id}" data-amount="${booking.total_price}" title="Paiement">Paiement</button>
+                            ` : `
+                                <button class="booking-btn pdf-btn" data-booking-id="${booking.id}" title="Telecharger PDF">Télécharger PDF</button>
+                            `}
+                        </div>
                     `;
 
-                    // Add event listeners for edit, delete and payment buttons
-                    const editBtn = bookingEl.querySelector('.edit-btn');
-                    const deleteBtn = bookingEl.querySelector('.delete-btn');
-                    const paymentBtn = bookingEl.querySelector('.payment-btn');
 
-                    editBtn.addEventListener('click', () => {
-                        editBooking(booking);
-                    });
+                    // Add event listeners for edit, delete and payment buttons only if not confirmed
+                    if (!isConfirmed) {
+                        const editBtn = bookingEl.querySelector('.edit-btn');
+                        const deleteBtn = bookingEl.querySelector('.delete-btn');
+                        const paymentBtn = bookingEl.querySelector('.payment-btn');
 
-                    deleteBtn.addEventListener('click', () => {
-                        deleteBooking(booking.id, bookingEl);
-                    });
+                        editBtn.addEventListener('click', () => {
+                            editBooking(booking);
+                        });
 
-                    paymentBtn.addEventListener('click', () => {
-                        processPayment(booking);
-                    });
+                        deleteBtn.addEventListener('click', () => {
+                            deleteBooking(booking.id, bookingEl);
+                        });
+
+                        paymentBtn.addEventListener('click', () => {
+                            processPayment(booking);
+                        });
+                    } else {
+                        // For confirmed bookings, add listener for PDF download
+                        const pdfBtn = bookingEl.querySelector('.pdf-btn');
+                        if (pdfBtn) {
+                            pdfBtn.addEventListener('click', () => {
+                                downloadBookingPDF(booking.id);
+                            });
+                        }
+                    }
 
                     bookingsList.appendChild(bookingEl);
                 });
@@ -646,6 +665,37 @@ document.addEventListener('DOMContentLoaded', function () {
         } catch (error) {
             console.error('Error processing payment:', error);
             alert('Erreur lors du traitement du paiement');
+        }
+    }
+
+    async function downloadBookingPDF(bookingId) {
+        try {
+            const response = await fetch(`/api/booking/${bookingId}/pdf`);
+
+            if (response.ok) {
+                // Get the PDF blob
+                const blob = await response.blob();
+
+                // Create a temporary download link
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `reservation_${bookingId}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+
+                // Clean up
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+
+                showSuccessNotification('PDF téléchargé avec succès !');
+            } else {
+                const data = await response.json();
+                alert('Erreur: ' + (data.error || 'Impossible de télécharger le PDF'));
+            }
+        } catch (error) {
+            console.error('Error downloading PDF:', error);
+            alert('Erreur lors du téléchargement du PDF');
         }
     }
 
