@@ -120,13 +120,26 @@ document.addEventListener('DOMContentLoaded', function () {
         accountLoggedIn.classList.remove('hidden');
         document.getElementById('account-user-name').textContent = `${currentUser.prenom} ${currentUser.nom}`;
         document.getElementById('account-user-email').textContent = currentUser.email;
-        // Show "Mes réservations" button in prices section
-        myBookingsBtnSection.classList.remove('hidden');
+
+        // Show admin buttons or "Mes réservations" based on user role
+        if (currentUser.is_admin) {
+            myBookingsBtnSection.classList.add('hidden');
+            document.getElementById('add-film-btn-hero').classList.remove('hidden');
+            document.getElementById('add-showtime-btn-hero').classList.remove('hidden');
+        } else {
+            myBookingsBtnSection.classList.remove('hidden');
+            document.getElementById('add-film-btn-hero').classList.add('hidden');
+            document.getElementById('add-showtime-btn-hero').classList.add('hidden');
+        }
     }
 
     function updateUIForLoggedOut() {
         accountLoggedIn.classList.add('hidden');
         accountLoggedOut.classList.remove('hidden');
+        // Hide all user/admin buttons in hero
+        document.getElementById('my-bookings-btn-hero').classList.add('hidden');
+        document.getElementById('add-film-btn-hero').classList.add('hidden');
+        document.getElementById('add-showtime-btn-hero').classList.add('hidden');
         // Hide "Mes réservations" button in prices section
         myBookingsBtnSection.classList.add('hidden');
     }
@@ -1498,6 +1511,26 @@ document.addEventListener('DOMContentLoaded', function () {
     // Open admin modal
     if (adminBtn) {
         adminBtn.addEventListener('click', () => {
+            adminModal.classList.remove('hidden');
+            adminModal.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+        });
+    }
+
+    // Admin hero buttons
+    const addFilmBtnHero = document.getElementById('add-film-btn-hero');
+    const addShowtimeBtnHero = document.getElementById('add-showtime-btn-hero');
+
+    if (addFilmBtnHero) {
+        addFilmBtnHero.addEventListener('click', () => {
+            adminModal.classList.remove('hidden');
+            adminModal.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+        });
+    }
+
+    if (addShowtimeBtnHero) {
+        addShowtimeBtnHero.addEventListener('click', () => {
             adminModal.classList.remove('hidden');
             adminModal.setAttribute('aria-hidden', 'false');
             document.body.style.overflow = 'hidden';
