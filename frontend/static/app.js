@@ -1474,6 +1474,111 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // ========================================
+    // ADMIN PANEL
+    // ========================================
+    const adminBtn = document.getElementById('admin-btn');
+    const adminModal = document.getElementById('admin-modal');
+    const addShowtimeForm = document.getElementById('add-showtime-form');
+
+    // Show/hide admin button based on user role
+    function updateAdminButton() {
+        if (currentUser && currentUser.is_admin) {
+            adminBtn.classList.remove('hidden');
+        } else {
+            adminBtn.classList.add('hidden');
+        }
+    }
+
+    // Open admin modal
+    if (adminBtn) {
+        adminBtn.addEventListener('click', () => {
+            adminModal.classList.remove('hidden');
+            adminModal.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+        });
+    }
+
+    // Close admin modal
+    const adminModalClose = adminModal.querySelector('.modal-close');
+    if (adminModalClose) {
+        adminModalClose.addEventListener('click', () => {
+            adminModal.classList.add('hidden');
+            adminModal.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = 'auto';
+        });
+        adminModal.querySelector('.modal-backdrop').addEventListener('click', () => {
+            adminModal.classList.add('hidden');
+            adminModal.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = 'auto';
+        });
+    }
+
+    // Handle add showtime form submission
+    if (addShowtimeForm) {
+        addShowtimeForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const filmTitle = document.getElementById('admin-film').value;
+            const dateValue = document.getElementById('admin-date').value;
+            const timeValue = document.getElementById('admin-time').value;
+            const theatreId = document.getElementById('admin-theatre').value;
+            const errorEl = document.getElementById('admin-showtime-error');
+
+            if (!filmTitle || !dateValue || !timeValue || !theatreId) {
+                errorEl.textContent = 'Tous les champs sont requis';
+                errorEl.classList.remove('hidden');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/admin/showtime', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        film_title: filmTitle,
+                        film_date: dateValue,
+                        film_time: timeValue,
+                        theatre_id: parseInt(theatreId)
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showSuccessNotification('Séance ajoutée avec succès!');
+                    addShowtimeForm.reset();
+                    errorEl.classList.add('hidden');
+                    setTimeout(() => {
+                        adminModal.classList.add('hidden');
+                        adminModal.setAttribute('aria-hidden', 'true');
+                        document.body.style.overflow = 'auto';
+                    }, 500);
+                } else {
+                    errorEl.textContent = data.error || 'Erreur lors de l\'ajout de la séance';
+                    errorEl.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Error adding showtime:', error);
+                errorEl.textContent = 'Erreur lors de la connexion au serveur';
+                errorEl.classList.remove('hidden');
+            }
+        });
+    }
+
+    // Update admin button visibility when user status changes
+    const originalUpdateUIForLoggedIn = updateUIForLoggedIn;
+    updateUIForLoggedIn = function() {
+        originalUpdateUIForLoggedIn.call(this);
+        updateAdminButton();
+    };
+
+    const originalUpdateUIForLoggedOut = updateUIForLoggedOut;
+    updateUIForLoggedOut = function() {
+        originalUpdateUIForLoggedOut.call(this);
+        updateAdminButton();
+    };
+
+    // ========================================
     // CONSOLE MESSAGE
     // ========================================
     console.log('CinéMax Booking System - Ready! 🎬');

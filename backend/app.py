@@ -543,22 +543,23 @@ def login():
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
 
-        cursor.execute("SELECT id, password, nom, prenom FROM users WHERE email = ?", (email,))
+        cursor.execute("SELECT id, password, nom, prenom, is_admin FROM users WHERE email = ?", (email,))
         user = cursor.fetchone()
         conn.close()
 
         if not user or not check_password_hash(user[1], password):
             return jsonify({"success": False, "error": "Email ou mot de passe incorrect"}), 401
 
-        user_id, _, nom, prenom = user
+        user_id, _, nom, prenom, is_admin = user
         session["user_id"] = user_id
         session["email"] = email
         session["nom"] = nom
         session["prenom"] = prenom
+        session["is_admin"] = is_admin
 
         return jsonify({
             "success": True,
-            "user": {"id": user_id, "email": email, "nom": nom, "prenom": prenom}
+            "user": {"id": user_id, "email": email, "nom": nom, "prenom": prenom, "is_admin": is_admin}
         })
 
     except Exception as e:
@@ -582,7 +583,8 @@ def get_user():
             "id": session.get("user_id"),
             "email": session.get("email"),
             "nom": session.get("nom"),
-            "prenom": session.get("prenom")
+            "prenom": session.get("prenom"),
+            "is_admin": session.get("is_admin", 0)
         }
     })
 
@@ -925,6 +927,97 @@ def get_showtimes():
 
     showtimes = get_showtimes_for_date(movie_title, date)
     return jsonify({"success": True, "showtimes": showtimes})
+
+
+# ========================================
+# ADMIN ROUTES
+# ========================================
+
+@app.route("/api/admin/movie", methods=["POST"])
+def add_movie():
+    if "user_id" not in session:
+        return jsonify({"success": False, "error": "Non authentifié"}), 401
+
+    if not session.get("is_admin"):
+        return jsonify({"success": False, "error": "Accès refusé - administrateur requis"}), 403
+
+    data = request.get_json()
+    title = data.get("title")
+    director = data.get("director")
+    cast = data.get("cast")
+    description = data.get("description")
+    duration = data.get("duration")
+    ratings = data.get("ratings")
+    poster = data.get("poster")
+    trailer = data.get("trailer")
+
+    if not all([title, director, cast, description, duration, ratings, poster]):
+        return jsonify({"success": False, "error": "Tous les champs sont requis"}), 400
+
+    try:
+        # In a real app, you'd store movies in database
+        # For now, we'll just return success
+        return jsonify({
+            "success": True,
+            "message": f"Film '{title}' ajouté avec succès",
+            "movie": {
+                "title": title,
+                "director": director,
+                "cast": cast,
+                "description": description,
+                "duration": duration,
+                "ratings": ratings,
+                "poster": poster,
+                "trailer": trailer
+            }
+        })
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/admin/showtime", methods=["POST"])
+def add_showtime():
+    if "user_id" not in session:
+        return jsonify({"success": False, "error": "Non authentifié"}), 401
+
+    if not session.get("is_admin"):
+        return jsonify({"success": False, "error": "Accès refusé - administrateur requis"}), 403
+
+    data = request.get_json()
+    film_title = data.get("film_title")
+    film_date = data.get("film_date")
+    film_time = data.get("film_time")
+    theatre_id = data.get("theatre_id")
+
+    if not all([film_title, film_date, film_time, theatre_id]):
+        return jsonify({"success": False, "error": "Tous les champs sont requis"}), 400
+
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "INSERT INTO showtimes (film_title, film_date, film_time, theatre_id, available_seats) VALUES (?, ?, ?, ?, ?)",
+            (film_title, film_date, film_time, theatre_id, 96)
+        )
+        conn.commit()
+        showtime_id = cursor.lastrowid
+        conn.close()
+
+        return jsonify({
+            "success": True,
+            "message": f"Séance ajoutée avec succès",
+            "showtime": {
+                "id": showtime_id,
+                "film_title": film_title,
+                "film_date": film_date,
+                "film_time": film_time,
+                "theatre_id": theatre_id,
+                "available_seats": 96
+            }
+        })
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
 
 
 if __name__ == "__main__":

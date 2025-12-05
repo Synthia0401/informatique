@@ -33,6 +33,7 @@
                             <p id="account-user-name"></p>
                             <p id="account-user-email"></p>
                         </div>
+                        <button id="admin-btn" class="account-menu-item hidden" title="Panneau d'administration">⚙️ Administration</button>
                         <button id="logout-btn" class="account-menu-item logout">Déconnexion</button>
                     </div>
                     <div id="account-logged-out">
@@ -307,6 +308,57 @@
             <h2 class="modal-title">Mes réservations</h2>
             <div id="bookings-list" class="bookings-list">
                 <p>Aucune réservation pour le moment.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Panel Modal -->
+    <div id="admin-modal" class="modal hidden" role="dialog" aria-hidden="true">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <button class="modal-close" aria-label="Fermer la modale">✕</button>
+            <h2 class="modal-title">Panneau Admin</h2>
+
+            <div class="admin-tabs">
+                <button class="admin-tab-btn active" data-tab="add-showtime">Ajouter une séance</button>
+            </div>
+
+            <!-- Add Showtime Form -->
+            <div id="add-showtime-tab" class="admin-tab-content active">
+                <form id="add-showtime-form" class="booking-form">
+                    <div class="form-group">
+                        <label for="admin-film">Film</label>
+                        <input type="text" id="admin-film" placeholder="Titre du film" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="admin-date">Date</label>
+                            <input type="date" id="admin-date" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="admin-time">Heure</label>
+                            <input type="time" id="admin-time" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="admin-theatre">Salle</label>
+                        <select id="admin-theatre" required>
+                            <option value="">Sélectionnez une salle</option>
+                            <option value="1">Salle 1</option>
+                            <option value="2">Salle 2</option>
+                            <option value="3">Salle 3</option>
+                            <option value="4">Salle 4</option>
+                            <option value="5">Salle 5</option>
+                            <option value="6">Salle 6</option>
+                            <option value="7">Salle 7</option>
+                            <option value="8">Salle 8</option>
+                            <option value="9">Salle 9</option>
+                            <option value="10">Salle 10</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Ajouter la séance</button>
+                    <div id="admin-showtime-error" class="error-message hidden"></div>
+                </form>
             </div>
         </div>
     </div>
