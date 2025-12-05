@@ -1558,6 +1558,41 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // Function to render a movie card
+    function createMovieCard(movie) {
+        const div = document.createElement('div');
+        div.className = 'movie-card';
+        div.setAttribute('data-title', movie.title);
+        div.setAttribute('data-color', movie.color || '');
+
+        const trailerLink = movie.trailer ? `<a href="${movie.trailer}" target="_blank" class="trailer-btn">🎬 Bande-annonce</a>` : '';
+
+        div.innerHTML = `
+            <div class="movie-poster" style="${movie.color ? `background: ${movie.color}` : ''}">
+                <img src="${movie.poster}" alt="Affiche ${movie.title}" loading="lazy">
+                <div class="movie-overlay">
+                    <span class="rating">${movie.ratings}</span>
+                </div>
+            </div>
+            <div class="movie-info">
+                <h3 class="movie-title">${movie.title}</h3>
+                <p class="movie-director"><strong>Réalisateur:</strong> ${movie.director}</p>
+                <p class="movie-cast"><strong>Acteurs:</strong> ${movie.cast}</p>
+                <p class="movie-meta">⏱️ ${movie.duration} min | ${movie.ratings}</p>
+                <p class="movie-description">${movie.description}</p>
+                <div class="movie-links">
+                    ${trailerLink}
+                </div>
+                <div class="showtimes">
+                    <button class="reserve-btn" data-movie-id="${movie.id}" data-title="${movie.title}"
+                            data-showtimes="">📅 Réserver</button>
+                </div>
+            </div>
+        `;
+
+        return div;
+    }
+
     // Handle add film form submission
     if (addFilmForm) {
         addFilmForm.addEventListener('submit', async (e) => {
@@ -1603,12 +1638,30 @@ document.addEventListener('DOMContentLoaded', function () {
                     addFilmForm.reset();
                     errorEl.classList.add('hidden');
 
-                    // Close modal and refresh movies list
+                    // Add the new movie card to the grid
+                    const moviesGrid = document.querySelector('.movies-grid');
+                    if (moviesGrid && data.movie) {
+                        const newCard = createMovieCard(data.movie);
+                        moviesGrid.appendChild(newCard);
+
+                        // Re-attach reserve button listener to the new card
+                        const newReserveBtn = newCard.querySelector('.reserve-btn');
+                        if (newReserveBtn) {
+                            newReserveBtn.addEventListener('click', () => {
+                                if (!currentUser) {
+                                    openAuthModal();
+                                    return;
+                                }
+                                openModal(title);
+                            });
+                        }
+                    }
+
+                    // Close modal
                     setTimeout(() => {
                         adminModal.classList.add('hidden');
                         adminModal.setAttribute('aria-hidden', 'true');
                         document.body.style.overflow = 'auto';
-                        location.reload();
                     }, 500);
                 } else {
                     errorEl.textContent = data.error || 'Erreur lors de l\'ajout du film';
