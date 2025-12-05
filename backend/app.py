@@ -889,6 +889,9 @@ def delete_booking(booking_id):
         if result[0] != user_id:
             return jsonify({"success": False, "error": "Non autorisé"}), 403
 
+        # Supprimer les places réservées associées à cette réservation
+        cursor.execute("DELETE FROM seat_bookings WHERE reservation_id = ?", (booking_id,))
+
         # Supprimer la réservation
         cursor.execute("DELETE FROM reservations WHERE id = ?", (booking_id,))
         conn.commit()
