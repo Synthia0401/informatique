@@ -830,6 +830,67 @@ main {
     margin-bottom: 20px;
 }
 
+/* Role Selection Styles */
+.auth-section {
+    animation: fadeIn 0.3s ease;
+}
+
+.auth-section.hidden {
+    display: none;
+}
+
+.role-selection-text {
+    text-align: center;
+    color: var(--text-secondary);
+    margin-bottom: 25px;
+    font-size: 16px;
+}
+
+.role-selection-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.role-btn {
+    padding: 15px 20px !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+    transition: all 0.3s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+}
+
+.role-btn:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 20px rgba(255, 107, 74, 0.3) !important;
+}
+
+.auth-switch-link {
+    text-align: center;
+    margin-top: 15px;
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.link-btn {
+    background: none;
+    border: none;
+    color: var(--primary-color);
+    cursor: pointer;
+    font-weight: 600;
+    transition: color 0.3s ease;
+    padding: 0;
+    font-size: inherit;
+}
+
+.link-btn:hover {
+    color: var(--secondary-color);
+}
+
 /* ========================================
    FORMS
    ======================================== */

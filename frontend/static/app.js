@@ -216,6 +216,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function openAuthModal() {
+        showRoleSelection();
         authModal.classList.remove('hidden');
         authModal.setAttribute('aria-hidden', 'false');
         document.body.style.overflow = 'hidden';
@@ -227,7 +228,7 @@ document.addEventListener('DOMContentLoaded', function () {
         document.body.style.overflow = 'auto';
         loginForm.reset();
         registerForm.reset();
-        showLoginForm(); // Reset to login tab
+        showRoleSelection(); // Reset to role selection
     }
 
     function showLoginForm() {
@@ -238,6 +239,47 @@ document.addEventListener('DOMContentLoaded', function () {
     function showRegisterForm() {
         loginFormSection.classList.add('hidden');
         registerFormSection.classList.remove('hidden');
+    }
+
+    function showRoleSelection() {
+        const roleSelectionSection = document.getElementById('role-selection-section');
+        roleSelectionSection.classList.remove('hidden');
+        loginFormSection.classList.add('hidden');
+        registerFormSection.classList.add('hidden');
+    }
+
+    function hideRoleSelection() {
+        const roleSelectionSection = document.getElementById('role-selection-section');
+        roleSelectionSection.classList.add('hidden');
+    }
+
+    // Role Selection Buttons
+    const selectClientBtn = document.getElementById('select-client-btn');
+    const selectAdminBtn = document.getElementById('select-admin-btn');
+
+    if (selectClientBtn) {
+        selectClientBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            hideRoleSelection();
+            showLoginForm();
+        });
+    }
+
+    if (selectAdminBtn) {
+        selectAdminBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            hideRoleSelection();
+            showLoginForm();
+        });
+    }
+
+    // Back to role selection
+    const backToRoleSelectionBtn = document.getElementById('back-to-role-selection');
+    if (backToRoleSelectionBtn) {
+        backToRoleSelectionBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            showRoleSelection();
+        });
     }
 
     // Account button toggle
@@ -365,7 +407,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const loginBtnMenu = document.getElementById('login-btn-menu');
     if (loginBtnMenu) {
         loginBtnMenu.addEventListener('click', () => {
-            showLoginForm();
             openAuthModal();
             accountMenu.classList.add('hidden');
         });

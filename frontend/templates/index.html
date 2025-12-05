@@ -230,8 +230,22 @@
         <div class="modal-content auth-modal">
             <button class="modal-close" aria-label="Fermer la modale">✕</button>
 
+            <!-- Role Selection Section -->
+            <div id="role-selection-section" class="auth-section">
+                <h2 class="modal-title">Connexion</h2>
+                <p class="role-selection-text">Veuillez choisir votre type de compte :</p>
+                <div class="role-selection-buttons">
+                    <button id="select-client-btn" class="btn btn-primary role-btn" style="width: 100%; margin-bottom: 15px;">
+                        👤 Client
+                    </button>
+                    <button id="select-admin-btn" class="btn btn-secondary role-btn" style="width: 100%;">
+                        🔑 Administrateur
+                    </button>
+                </div>
+            </div>
+
             <!-- Login Form -->
-            <div id="login-form-section" class="auth-section">
+            <div id="login-form-section" class="auth-section hidden">
                 <h2 class="modal-title">Connexion</h2>
                 <form id="login-form" class="booking-form">
                     <div class="form-group">
@@ -247,6 +261,9 @@
                 </form>
                 <div class="auth-switch-link">
                     Pas de compte? <button id="switch-to-register" class="link-btn">Créer un</button>
+                </div>
+                <div style="margin-top: 15px; border-top: 1px solid #ddd; padding-top: 15px;">
+                    <button id="back-to-role-selection" class="link-btn" style="color: #666;">← Retour</button>
                 </div>
             </div>
 
