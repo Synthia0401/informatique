@@ -784,21 +784,34 @@ def my_bookings():
             (session["user_id"],)
         )
         bookings = cursor.fetchall()
-        conn.close()
 
-        booking_list = [
-            {
+        booking_list = []
+        for b in bookings:
+            booking_id = b[0]
+
+            # Get selected seats for this booking
+            cursor.execute(
+                "SELECT row_letter, seat_number FROM seat_bookings WHERE reservation_id = ? ORDER BY row_letter, seat_number",
+                (booking_id,)
+            )
+            seats_data = cursor.fetchall()
+            selected_seats = [
+                {"row": seat[0], "seat": seat[1], "seatId": f"{seat[0]}-{seat[1]}"}
+                for seat in seats_data
+            ]
+
+            booking_list.append({
                 "id": b[0],
                 "film_title": b[1],
                 "film_date": b[2],
                 "film_time": b[3],
                 "seats": b[4],
                 "total_price": b[5],
-                "created_at": b[6]
-            }
-            for b in bookings
-        ]
+                "created_at": b[6],
+                "selected_seats": selected_seats
+            })
 
+        conn.close()
         return jsonify({"success": True, "bookings": booking_list})
 
     except Exception as e:

@@ -528,6 +528,15 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     async function editBooking(booking) {
+        // Mark as editing mode FIRST
+        bookingForm.dataset.editingBookingId = booking.id;
+        bookingForm.dataset.isEditing = 'true';
+
+        // Store existing seat data for pre-selection
+        if (booking.selected_seats) {
+            bookingForm.dataset.existingSeats = JSON.stringify(booking.selected_seats);
+        }
+
         // Remplir le formulaire de réservation avec les données actuelles
         bkFilm.value = booking.film_title;
         document.getElementById('bk-count').value = booking.seats;
@@ -558,12 +567,10 @@ document.addEventListener('DOMContentLoaded', function () {
             console.warn(`Could not find option for time: ${booking.film_time}`);
         }
 
-        // Stocker l'ID de la réservation en édition
-        bookingForm.dataset.editingBookingId = booking.id;
-
         // Fermer le modal des réservations et ouvrir le modal de réservation
         bookingsModal.classList.add('hidden');
         modal.classList.remove('hidden');
+        modal.setAttribute('aria-hidden', 'false');
         document.body.style.overflow = 'hidden';
     }
 
@@ -646,26 +653,29 @@ document.addEventListener('DOMContentLoaded', function () {
     // MODAL MANAGEMENT
     // ========================================
     function openModal(title, date, time) {
-        bkFilm.value = title;
+        // Only set values if NOT in editing mode (editing mode is set by editBooking())
+        if (bookingForm.dataset.isEditing !== 'true') {
+            bkFilm.value = title;
 
-        // Populate showtimes based on the selected film
-        populateShowtimes(title);
+            // Populate showtimes based on the selected film
+            populateShowtimes(title);
 
-        // Set the date input
-        if (date) {
-            bkDate.value = date;
-        } else {
-            // Set today as default
-            const today = new Date();
-            const year = today.getFullYear();
-            const month = String(today.getMonth() + 1).padStart(2, '0');
-            const day = String(today.getDate()).padStart(2, '0');
-            bkDate.value = `${year}-${month}-${day}`;
-        }
+            // Set the date input
+            if (date) {
+                bkDate.value = date;
+            } else {
+                // Set today as default
+                const today = new Date();
+                const year = today.getFullYear();
+                const month = String(today.getMonth() + 1).padStart(2, '0');
+                const day = String(today.getDate()).padStart(2, '0');
+                bkDate.value = `${year}-${month}-${day}`;
+            }
 
-        // Set the time value if provided
-        if (time) {
-            bkTime.value = time;
+            // Set the time value if provided
+            if (time) {
+                bkTime.value = time;
+            }
         }
 
         modal.classList.remove('hidden');
@@ -682,6 +692,11 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('seat-categories').classList.add('hidden');
         // Clean up editing state
         delete bookingForm.dataset.editingBookingId;
+        delete bookingForm.dataset.isEditing;
+        delete bookingForm.dataset.existingSeats;
+        // Reset selected seats
+        selectedSeatsData = [];
+        document.getElementById('bk-selected-seats').value = '';
     }
 
     // ========================================
@@ -1287,6 +1302,18 @@ document.addEventListener('DOMContentLoaded', function () {
             currentTheatreId = data.theatre_id;
             selectedSeatsData = [];
 
+            // Check if we're in editing mode and have existing seats to pre-select
+            const existingSeatsJson = bookingForm.dataset.existingSeats;
+            let existingSeats = [];
+            if (existingSeatsJson) {
+                try {
+                    existingSeats = JSON.parse(existingSeatsJson);
+                    selectedSeatsData = [...existingSeats];
+                } catch (e) {
+                    console.error('Error parsing existing seats:', e);
+                }
+            }
+
             // Store theatre ID in hidden field
             document.getElementById('bk-theatre-id').value = data.theatre_id;
 
@@ -1315,6 +1342,12 @@ document.addEventListener('DOMContentLoaded', function () {
                         seatBtn.classList.add('booked');
                         seatBtn.disabled = true;
                     } else {
+                        // Check if this seat was previously selected (for editing mode)
+                        const seatId = `${row.row}-${seat.number}`;
+                        const wasSelected = existingSeats.some(s => s.seatId === seatId);
+                        if (wasSelected) {
+                            seatBtn.classList.add('selected');
+                        }
                         seatBtn.addEventListener('click', toggleSeatSelection);
                     }
 
@@ -1343,11 +1376,13 @@ document.addEventListener('DOMContentLoaded', function () {
             `;
             seatLayout.appendChild(legend);
 
+            // Update seat count display
+            updateSeatCount();
+
             // Show modal
             seatSelectionModal.classList.remove('hidden');
             seatSelectionModal.setAttribute('aria-hidden', 'false');
             document.body.style.overflow = 'hidden';
-            updateSeatCount();
 
         } catch (error) {
             console.error('Error loading seats:', error);
