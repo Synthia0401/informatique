@@ -1,10 +1,11 @@
+# Import des bibliothèques nécessaires
 from flask import Flask, render_template, url_for, request, jsonify, session, send_file
 from datetime import datetime, timedelta
-from werkzeug.security import generate_password_hash, check_password_hash
-import sqlite3
+from werkzeug.security import generate_password_hash, check_password_hash  # Pour sécuriser les mots de passe
+import sqlite3  # Base de données
 import os
 import json
-import qrcode
+import qrcode  # Génération de codes QR
 from io import BytesIO
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
@@ -12,49 +13,53 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 
+# Créer l'application Flask
 app = Flask(
     __name__,
-    template_folder="../frontend/templates",
-    static_folder="../frontend/static",
+    template_folder="../frontend/templates",  # Dossier des fichiers HTML
+    static_folder="../frontend/static",        # Dossier des fichiers CSS/JS
 )
 
-app.secret_key = "votre_clé_secrète_cinema_2024"  # À changer en production
+# Clé secrète pour les sessions (ATTENTION: à changer en production!)
+app.secret_key = "votre_clé_secrète_cinema_2024"
+# Chemin vers la base de données
 DB_PATH = os.path.join(os.path.dirname(__file__), "cinema.db")
 
-# Initialiser la base de données
+# =========== INITIALISATION DE LA BASE DE DONNÉES ===========
+# Cette fonction crée les tables si elles n'existent pas encore
 def init_db():
     if not os.path.exists(DB_PATH):
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
 
-        # Table utilisateurs
+        # Table pour stocker les utilisateurs
         cursor.execute('''
             CREATE TABLE users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 email TEXT UNIQUE NOT NULL,
-                password TEXT NOT NULL,
+                password TEXT NOT NULL,  -- Mot de passe hashé
                 nom TEXT NOT NULL,
                 prenom TEXT NOT NULL,
                 sexe TEXT,
                 ville TEXT,
                 habitation TEXT,
-                is_admin INTEGER DEFAULT 0,
+                is_admin INTEGER DEFAULT 0,  -- 0 = user normal, 1 = admin
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ''')
 
-        # Table salles de cinéma
+        # Table pour les salles de cinéma
         cursor.execute('''
             CREATE TABLE theatres (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL,
                 capacity INTEGER NOT NULL,
-                rows INTEGER NOT NULL,
-                seats_per_row INTEGER NOT NULL
+                rows INTEGER NOT NULL,  -- Nombre de rangées
+                seats_per_row INTEGER NOT NULL  -- Places par rangée
             )
         ''')
 
-        # Table séances (showtimes)
+        # Table pour les séances (date + heure + salle)
         cursor.execute('''
             CREATE TABLE showtimes (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -62,14 +67,14 @@ def init_db():
                 film_date TEXT NOT NULL,
                 film_time TEXT NOT NULL,
                 theatre_id INTEGER NOT NULL,
-                available_seats INTEGER NOT NULL,
+                available_seats INTEGER NOT NULL,  -- Places restantes
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY(theatre_id) REFERENCES theatres(id),
-                UNIQUE(film_date, film_time, theatre_id)
+                UNIQUE(film_date, film_time, theatre_id)  -- Pas de doublon
             )
         ''')
 
-        # Table réservations
+        # Table pour les réservations (globales)
         cursor.execute('''
             CREATE TABLE reservations (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -77,11 +82,11 @@ def init_db():
                 film_title TEXT NOT NULL,
                 film_date TEXT NOT NULL,
                 film_time TEXT NOT NULL,
-                seats INTEGER NOT NULL,
+                seats INTEGER NOT NULL,  -- Nombre de places
                 total_price REAL NOT NULL,
                 theatre_id INTEGER,
                 showtime_id INTEGER,
-                seat_categories TEXT,
+                seat_categories TEXT,  -- Format JSON des catégories
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY(user_id) REFERENCES users(id),
                 FOREIGN KEY(theatre_id) REFERENCES theatres(id),
@@ -89,23 +94,23 @@ def init_db():
             )
         ''')
 
-        # Table des sièges réservés
+        # Table pour stocker les sièges réservés individuels
         cursor.execute('''
             CREATE TABLE seat_bookings (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 reservation_id INTEGER NOT NULL,
                 theatre_id INTEGER NOT NULL,
                 showtime_id INTEGER NOT NULL,
-                row_letter TEXT NOT NULL,
-                seat_number INTEGER NOT NULL,
-                category TEXT,
+                row_letter TEXT NOT NULL,  -- A, B, C...
+                seat_number INTEGER NOT NULL,  -- 1, 2, 3...
+                category TEXT,  -- adulte, enfant, senior...
                 FOREIGN KEY(reservation_id) REFERENCES reservations(id),
                 FOREIGN KEY(theatre_id) REFERENCES theatres(id),
                 FOREIGN KEY(showtime_id) REFERENCES showtimes(id)
             )
         ''')
 
-        # Table des films
+        # Table pour les films
         cursor.execute('''
             CREATE TABLE movies (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -114,10 +119,10 @@ def init_db():
                 cast TEXT NOT NULL,
                 description TEXT NOT NULL,
                 duration INTEGER NOT NULL,
-                ratings TEXT NOT NULL,
-                poster TEXT NOT NULL,
-                trailer TEXT,
-                color TEXT,
+                ratings TEXT NOT NULL,  -- Classification (tous publics, 12+...)
+                poster TEXT NOT NULL,  -- URL de l'affiche
+                trailer TEXT,  -- URL YouTube
+                color TEXT,  -- Gradient CSS personnalisé
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ''')
@@ -125,26 +130,28 @@ def init_db():
         conn.commit()
         conn.close()
 
+# Appeler la fonction pour initialiser la BD
 init_db()
 
-# Create test user account
+# =========== CRÉATION DES COMPTES DE TEST ===========
+# Ces comptes permettent de tester l'app sans créer de comptes
 def create_test_user():
-    """Create a test user and admin user for demonstration"""
     try:
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
 
-        # Check if test user already exists
+        # Vérifier si le user de test existe déjà
         cursor.execute("SELECT id FROM users WHERE email = ?", ("test@cinema.com",))
         if cursor.fetchone() is None:
-            hashed_password = generate_password_hash("test1234")
+            # Créer un user normal pour tester les réservations
+            hashed_password = generate_password_hash("test1234")  # Hash du mot de passe
             cursor.execute(
                 "INSERT INTO users (email, password, nom, prenom, sexe, ville, habitation, is_admin) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                 ("test@cinema.com", hashed_password, "Test", "User", "M", "Paris", "123 Rue de la Paix", 0)
             )
             conn.commit()
 
-        # Create admin user
+        # Créer un compte administrateur
         cursor.execute("SELECT id FROM users WHERE email = ?", ("admin@cinema.com",))
         if cursor.fetchone() is None:
             hashed_password = generate_password_hash("admin1234")
@@ -156,8 +163,9 @@ def create_test_user():
 
         conn.close()
     except Exception as e:
-        pass
+        pass  # Silencieusement ignorer si l'user existe déjà
 
+# Créer les users de test au démarrage
 create_test_user()
 
 # Initialize movies in database
@@ -597,10 +605,9 @@ def home():
     )
 
 
-# ========================================
-# ROUTES D'AUTHENTIFICATION
-# ========================================
+# =========== ROUTES D'AUTHENTIFICATION ===========
 
+# Route pour créer un nouveau compte
 @app.route("/api/register", methods=["POST"])
 def register():
     data = request.get_json()
@@ -612,6 +619,7 @@ def register():
     ville = data.get("ville")
     habitation = data.get("habitation")
 
+    # Vérifier que tous les champs obligatoires sont remplis
     if not all([email, password, nom, prenom]):
         return jsonify({"success": False, "error": "Tous les champs sont requis"}), 400
 
@@ -619,6 +627,7 @@ def register():
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
 
+        # Hacher le mot de passe pour la sécurité
         hashed_password = generate_password_hash(password)
         cursor.execute(
             "INSERT INTO users (email, password, nom, prenom, sexe, ville, habitation) VALUES (?, ?, ?, ?, ?, ?, ?)",
@@ -628,6 +637,7 @@ def register():
         user_id = cursor.lastrowid
         conn.close()
 
+        # Créer une session pour l'utilisateur
         session["user_id"] = user_id
         session["email"] = email
         session["nom"] = nom
@@ -639,11 +649,13 @@ def register():
         })
 
     except sqlite3.IntegrityError:
+        # Si l'email existe déjà
         return jsonify({"success": False, "error": "Cet email existe déjà"}), 400
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
 
+# Route pour se connecter
 @app.route("/api/login", methods=["POST"])
 def login():
     data = request.get_json()
@@ -657,13 +669,16 @@ def login():
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
 
+        # Récupérer l'utilisateur par email
         cursor.execute("SELECT id, password, nom, prenom, is_admin FROM users WHERE email = ?", (email,))
         user = cursor.fetchone()
         conn.close()
 
+        # Vérifier le mot de passe
         if not user or not check_password_hash(user[1], password):
             return jsonify({"success": False, "error": "Email ou mot de passe incorrect"}), 401
 
+        # Créer la session
         user_id, _, nom, prenom, is_admin = user
         session["user_id"] = user_id
         session["email"] = email
@@ -680,12 +695,14 @@ def login():
         return jsonify({"success": False, "error": str(e)}), 500
 
 
+# Route pour se déconnecter
 @app.route("/api/logout", methods=["POST"])
 def logout():
-    session.clear()
+    session.clear()  # Supprimer tous les données de session
     return jsonify({"success": True})
 
 
+# Route pour obtenir les infos de l'utilisateur connecté
 @app.route("/api/user", methods=["GET"])
 def get_user():
     if "user_id" not in session:
@@ -703,8 +720,12 @@ def get_user():
     })
 
 
+# =========== ROUTES DE RÉSERVATION ===========
+
+# Route pour créer une réservation
 @app.route("/api/booking", methods=["POST"])
 def create_booking():
+    # Vérifier que l'utilisateur est connecté
     if "user_id" not in session:
         return jsonify({"success": False, "error": "Non authentifié"}), 401
 
@@ -714,27 +735,28 @@ def create_booking():
     film_date = data.get("film_date")
     film_time = data.get("film_time")
     seats = data.get("seats", 1)
-    seat_categories = data.get("seat_categories", [])
-    selected_seats = data.get("selected_seats", [])  # Format: [{"row": "A", "seat": 1, "category": "adult"}, ...]
+    seat_categories = data.get("seat_categories", [])  # Catégories de chaque place
+    selected_seats = data.get("selected_seats", [])  # Sièges sélectionnés
     showtime_id = data.get("showtime_id")
     theatre_id = data.get("theatre_id")
 
-    # Calculate total price based on seat categories
+    # Calculer le prix total selon les catégories
     total_price = 0
     if seat_categories and len(seat_categories) == int(seats):
         for category in seat_categories:
             total_price += float(PRICES.get(category, PRICES["adult"]))
     else:
-        # Fallback: use adult price if no categories provided
+        # Par défaut, utiliser le prix adulte
         total_price = float(PRICES["adult"]) * int(seats)
 
     try:
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
 
-        # Store seat_categories as JSON string
+        # Convertir les catégories en JSON pour la BD
         seat_categories_json = json.dumps(seat_categories) if seat_categories else json.dumps([])
 
+        # Insérer la réservation
         cursor.execute(
             "INSERT INTO reservations (user_id, film_title, film_date, film_time, seats, total_price, theatre_id, showtime_id, seat_categories) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (user_id, film_title, film_date, film_time, seats, total_price, theatre_id, showtime_id, seat_categories_json)
